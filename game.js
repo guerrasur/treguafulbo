@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.8.3';
+  const VERSION = '0.8.4';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -43,6 +43,30 @@
   const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
 
   const PROFILE_KEY='treguafulbo-profile-v1';
+  const CLUB_SETUP_KEY='treguafulbo-club-setup-v1';
+  function validClubColor(value){return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);}
+  function loadClubSetup(){
+    try{
+      const saved=JSON.parse(localStorage.getItem(CLUB_SETUP_KEY)||'null');
+      if(saved&&typeof saved.name==='string'&&saved.name.trim()&&Array.isArray(saved.colors)&&validClubColor(saved.colors[0])&&validClubColor(saved.colors[1])){
+        return {name:saved.name.trim().slice(0,22),colors:[saved.colors[0],saved.colors[1]]};
+      }
+    }catch{}
+    try{
+      const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);
+      const savedGame=raw?JSON.parse(raw):null,human=savedGame?.teams?.find(t=>t.human);
+      if(human&&typeof human.name==='string'&&human.name.trim()&&Array.isArray(human.colors)&&validClubColor(human.colors[0])&&validClubColor(human.colors[1])){
+        const prefs={name:human.name.trim().slice(0,22),colors:[human.colors[0],human.colors[1]]};
+        localStorage.setItem(CLUB_SETUP_KEY,JSON.stringify(prefs));return prefs;
+      }
+    }catch{}
+    return {name:'Equipo 1',colors:['#2e9b58','#f4f0d7']};
+  }
+  function saveClubSetup(name,colors){
+    const previous=loadClubSetup(),cleanName=typeof name==='string'&&name.trim()?name.trim().slice(0,22):previous.name;
+    const cleanColors=[validClubColor(colors?.[0])?colors[0]:previous.colors[0],validClubColor(colors?.[1])?colors[1]:previous.colors[1]];
+    const prefs={name:cleanName,colors:cleanColors};try{localStorage.setItem(CLUB_SETUP_KEY,JSON.stringify(prefs));}catch{}return prefs;
+  }
   function loadProfile(){
     try{const p=JSON.parse(localStorage.getItem('treguafulbo-profile-v1')||'null');return p?{xp:Number(p.xp)||0,collection:Array.isArray(p.collection)?p.collection:[],completed:Array.isArray(p.completed)?p.completed:[],matchAwards:Array.isArray(p.matchAwards)?p.matchAwards:[],sound:!!p.sound}:emptyProfile();}catch{return emptyProfile();}
   }
@@ -1073,6 +1097,7 @@
   }
   function init(){
     $('#versionLabel').textContent=`v${VERSION}`;$('.eyebrow').textContent=`DEMO OFFLINE · v${VERSION}`; updateContinue(); checkLatestVersion();renderCareerHome();
+    const clubSetup=loadClubSetup();$('#teamNameInput').value=clubSetup.name;$('#color1Input').value=clubSetup.colors[0];$('#color2Input').value=clubSetup.colors[1];
     $('#soundButton').addEventListener('click',toggleSound);updateSoundButton();
     $('#positionFilter').addEventListener('change',renderSquad);$('#marketFilter').addEventListener('change',renderMarket);$('#albumPositionFilter').addEventListener('change',renderAlbum);$('#albumRarityFilter').addEventListener('change',renderAlbum);
     $('#albumButton').addEventListener('click',()=>openScreen('albumScreen'));
@@ -1095,8 +1120,9 @@
     $$('[data-nav]').forEach(b=>b.addEventListener('click',()=>openScreen(b.dataset.nav)));
     $$('[data-back]').forEach(b=>b.addEventListener('click',()=>openScreen('gameScreen')));
     $$('[data-close-dialog]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
-    $('#setupForm').addEventListener('submit',e=>{e.preventDefault();if(state&&!state.finished){if(!confirm('La nueva partida reemplazará la liga actual. El álbum y los premios se conservan.'))return;}const name=$('#teamNameInput').value.trim()||'Equipo 1';newGame(name,[$('#color1Input').value,$('#color2Input').value],Number($('#teamCountInput').value));$('#setupDialog').close();toast('Liga creada · 6 partidos por equipo');});
-    const preview=()=>{const fake={colors:[$('#color1Input').value,$('#color2Input').value]};setCrest($('#crestPreview'),fake);}; $('#color1Input').addEventListener('input',preview);$('#color2Input').addEventListener('input',preview);preview();
+    $('#setupForm').addEventListener('submit',e=>{e.preventDefault();if(state&&!state.finished){if(!confirm('La nueva partida reemplazará la liga actual. El álbum y los premios se conservan.'))return;}const prefs=saveClubSetup($('#teamNameInput').value,[$('#color1Input').value,$('#color2Input').value]);$('#teamNameInput').value=prefs.name;newGame(prefs.name,prefs.colors,Number($('#teamCountInput').value));$('#setupDialog').close();toast('Liga creada · 6 partidos por equipo');});
+    const persistSetup=()=>saveClubSetup($('#teamNameInput').value,[$('#color1Input').value,$('#color2Input').value]);
+    const preview=()=>{const fake={colors:[$('#color1Input').value,$('#color2Input').value]};setCrest($('#crestPreview'),fake);}; $('#teamNameInput').addEventListener('input',persistSetup);$('#color1Input').addEventListener('input',()=>{persistSetup();preview();});$('#color2Input').addEventListener('input',()=>{persistSetup();preview();});preview();
   }
   document.addEventListener('DOMContentLoaded',init);
 })();
