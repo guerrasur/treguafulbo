@@ -2,6 +2,13 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.5.1
+
+- los partidos que una IA juega contra el equipo humano quedan pendientes y se reproducen al comenzar el siguiente turno del jugador, en lugar de aparecer sólo como texto en el resumen;
+- si hubo varios cruces contra el humano, se reproducen en orden antes del resumen de ronda;
+- la partida termina cuando el equipo humano se queda sin territorio o cuando queda un solo equipo con territorio;
+- los equipos eliminados dejan de ejecutar turnos, evitando rondas vacías y bucles sin salida;
+- el estado de partidos pendientes y fin de partida se guarda en el save para sobrevivir a una recarga.
 ## v0.5.0
 
 - corrige el bloqueo de turno cuando un equipo queda encerrado antes de que el tablero esté completo: si ya no tiene expansión libre, puede disputar una frontera rival;
