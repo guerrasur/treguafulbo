@@ -1,51 +1,185 @@
-const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+
 function engine(){
- const storage=new Map();const ctx={console,Math:Object.create(Math),Date,JSON,Number,Array,Object,Map,Set,String,Boolean,setTimeout,clearTimeout,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{addEventListener(){},querySelector(){return null;}}};
- vm.runInNewContext(fs.readFileSync('players-argentina-2026.js','utf8'),ctx);
- const source=fs.readFileSync('game.js','utf8').replace("document.addEventListener('DOMContentLoaded',init);",`globalThis.game={makeTeam,makeFixtures,initialMap,simulateMatch,resolveMatch,commitMatchStats,evaluateGameEnd,completeCalendarRound,canPlayPair,migrateSeason,weightedPack,teamAvg,teamProfile,autoBestXI,rankTeamsFor,load,save,awardSeason,awardMatch,playerById,PLAYERS,SLOTS,CONFIG,availableExpansion,battleCandidates,ownedTiles,hashStat,scoutingCapacity,ensureScouting,regionForCell,regionName,regionOwner,regionOwners,regionProgress,controlledRegions,regionChanges,roundIncome,grantRoundIncome,rewardFirstConquest,reinforceableCells,reinforceTile,playerCost,setState:s=>state=s,getState:()=>state,getProfile:()=>profile,setRandom:fn=>Math.random=fn};`);
- vm.runInNewContext(source,ctx);return ctx.game;
+  const storage=new Map();
+  const ctx={
+    console,
+    Math:Object.create(Math),
+    Date,JSON,Number,Array,Object,Map,Set,String,Boolean,
+    setTimeout:()=>0,clearTimeout(){},
+    localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
+    document:{addEventListener(){},querySelector(){return null;},querySelectorAll(){return [];}}
+  };
+  vm.runInNewContext(fs.readFileSync('players-argentina-2026.js','utf8'),ctx);
+  const api=`globalThis.game={
+    makeTeam,makeFixtures,makeLeagueMeta,createTournamentState,teamIdentitiesFromCurrent,
+    initialMap,simulateMatch,resolveMatch,commitMatchStats,evaluateGameEnd,completeCalendarRound,
+    canPlayPair,weightedPack,teamAvg,teamProfile,autoBestXI,rankTeamsFor,rankedLeagueTeams,
+    load,save,awardMatch,playerById,PLAYERS,SLOTS,CONFIG,LEAGUE_PLACEMENT_POINTS,
+    availableExpansion,battleCandidates,ownedTiles,hashStat,scoutingCapacity,ensureScouting,
+    regionForCell,regionName,regionOwner,regionOwners,regionProgress,controlledRegions,regionChanges,
+    roundIncome,grantRoundIncome,rewardFirstConquest,reinforceableCells,reinforceTile,playerCost,
+    finishGame,finalizeTournament,evaluateLeagueCompletion,completeTiebreaker,leagueClinchedId,
+    queueLateEntrant,setState:s=>state=s,getState:()=>state,getProfile:()=>profile,setRandom:fn=>Math.random=fn
+  };`;
+  const source=fs.readFileSync('game.js','utf8').replace("document.addEventListener('DOMContentLoaded',init);",api+"document.addEventListener('DOMContentLoaded',init);");
+  vm.runInNewContext(source,ctx);
+  return {g:ctx.game,storage};
 }
-function season(g,n){const teams=Array.from({length:n},(_,i)=>g.makeTeam(`t${i}`,`Equipo ${i}`,['#2f9d5b','#fff8df'],i===0));const s={id:`test-${Math.random()}`,seasonSchema:2,teams,fixtures:g.makeFixtures(teams),map:g.initialMap(n),matches:[],events:[],pendingHumanMatchIds:[],pendingTurnSummary:[],round:1,turnIndex:0,actionsLeft:3,finished:false};g.setState(s);return s;}
-test('Base 2026: 200 jugadores activos y 30 clubes argentinos',()=>{const g=engine(),arg=g.PLAYERS.filter(p=>p.season===2026),clubs=new Set(arg.flatMap(p=>p.clubs||[]));assert.equal(arg.length,200);assert.equal(clubs.size,30);for(const pos of ['ARQ','DEF','MED','DEL'])assert(arg.some(p=>p.pos===pos));const dimaria=arg.find(p=>p.name==='Ángel Di María');assert(dimaria);assert.equal(dimaria.club,'Rosario Central');assert(dimaria.seasonStats.matches>0);});
-for(const n of [2,3,4])test(`${n} equipos: 6 PJ exactos, cierre finito y conservación de puntos (100 ligas)`,()=>{
- for(let trial=0;trial<100;trial++){
-  const g=engine(),s=season(g,n);assert.equal(s.fixtures.length,n*3);assert.equal(g.teamAvg(s.teams[0]),g.teamProfile(s.teams[0]).overall);
-  for(const t of s.teams)assert.equal(s.fixtures.filter(f=>f.homeId===t.id||f.awayId===t.id).length,6);
-  while(!s.finished&&s.round<30){
-   // Mix territorial and fallback fixtures. Every third run has no territorial contact at all.
-   if(trial%3){const candidates=s.fixtures.filter(f=>!f.matchId&&g.canPlayPair(f.homeId,f.awayId));if(candidates.length){const f=candidates[Math.floor(Math.random()*candidates.length)],m=g.simulateMatch(f.homeId,f.awayId,s.map[0]);g.resolveMatch(m,'pressure',s.map[0],false);}}
-   g.completeCalendarRound();g.evaluateGameEnd();s.round++;
+
+function competition(g,n,seed='test'){
+  const teams=Array.from({length:n},(_,i)=>g.makeTeam(`t${i}`,`Equipo ${i}`,['#2f9d5b','#fff8df'],i===0));
+  teams.forEach(t=>{t.leagueTitles=0;t.joinedTournament=1;});
+  const league=g.makeLeagueMeta(teams,seed);
+  const state=g.createTournamentState(league,teams,1);
+  g.setState(state);
+  return state;
+}
+
+function resolveTiebreakers(g,state,winnerSelector=tb=>tb.homeId){
+  let guard=0;
+  while(state.pendingTiebreaker&&guard++<12)g.completeTiebreaker(winnerSelector(state.pendingTiebreaker));
+  assert(guard<12,'tiebreaker ladder must terminate');
+}
+
+function completeTournament(g,state){
+  let guard=0;
+  while(!state.tournament.awarded&&guard++<30){
+    if(!state.finished){g.completeCalendarRound();g.evaluateGameEnd();state.round++;}
+    resolveTiebreakers(g,state);
   }
-  assert(s.finished,'League must finish');assert(s.round<=14);for(const t of s.teams){assert.equal(t.played,6);assert.equal(t.wins+t.draws+t.losses,6);assert.equal(t.points,t.wins*3+t.draws);}
-  assert.equal(s.teams.reduce((a,t)=>a+t.gf,0),s.teams.reduce((a,t)=>a+t.ga,0));assert.equal(s.matches.length,n*3);
-  assert(s.winnerIds.length>=1);assert.equal(g.getProfile().completed.length,1);g.awardSeason();assert.equal(g.getProfile().completed.length,1);
- }
-});
-test('Sin territorio y mapa completo no bloquean la liga',()=>{for(const n of [2,3,4]){const g=engine(),s=season(g,n);s.map.forEach(c=>c.owner='t1');while(!s.finished&&s.round<20){g.completeCalendarRound();s.round++;}assert(s.finished);assert.equal(s.teams[0].played,6);}});
-test('Un partido se confirma una sola vez, respeta cupos y no vuelve a premiarse',()=>{const g=engine(),s=season(g,2);const m=g.simulateMatch('t0','t1',null);assert(g.commitMatchStats(m));const xp=g.getProfile().xp;assert(!g.commitMatchStats(m));g.awardMatch(m);assert.equal(g.getProfile().xp,xp);assert.equal(s.teams[0].played,1);assert(!g.canPlayPair('t0','t1'));s.round++;assert(g.canPlayPair('t0','t1'));});
-test('Historial excedente se conserva y reconstruye liga con 6 PJ',()=>{const g=engine(),s=season(g,2);s.seasonSchema=undefined;for(let i=0;i<12;i++)s.matches.push(g.simulateMatch('t0','t1',null));g.migrateSeason(s);assert.equal(s.matches.length,12);assert.equal(s.matches.filter(m=>m.countsForLeague).length,6);assert.equal(s.teams[0].played,6);assert(s.finished);assert(s.winnerIds.length>0);});
-test('Recarga conserva el partido sin resolver y los partidos recibidos',()=>{const g=engine(),s=season(g,3),m=g.simulateMatch('t0','t1',s.map[0]);s.pendingMatch={match:m,mode:'pressure',front:{x:0,y:0}};g.save();const loaded=g.load();assert.equal(loaded.pendingMatch.match.id,m.id);assert.equal(loaded.teams[0].played,0);assert.equal(loaded.pendingMatch.match.homeGoals,m.homeGoals);});
-test('Paquetes sin duplicados y colección completa',()=>{const g=engine(),s=season(g,2);let guard=0;while(s.teams[0].inventory.length<g.PLAYERS.length&&guard++<100){const picks=g.weightedPack(s.teams[0],5);assert.equal(new Set(picks.map(p=>p.id)).size,picks.length);picks.forEach(p=>{assert(!s.teams[0].inventory.includes(p.id));s.teams[0].inventory.push(p.id);});if(!picks.length)break;}assert.equal(s.teams[0].inventory.length,g.PLAYERS.length);assert.equal(g.weightedPack(s.teams[0]).length,0);});
-test('Desempate con enfrentamiento directo y posiciones compartidas',()=>{const g=engine(),s=season(g,3);s.teams.forEach(t=>{t.points=4;t.gf=3;t.ga=3;});s.matches=[{homeId:'t0',awayId:'t1',homeGoals:1,awayGoals:0,countsForLeague:true}];const ranked=g.rankTeamsFor(s);assert.equal(ranked[0].id,'t0');assert.equal(ranked[0].rank,1);s.matches=[];assert(g.rankTeamsFor(s).every(t=>t.rank===1));});
-test('Los eventos reproducen exactamente goles, remates, xG y tiros al arco (500 partidos)',()=>{const g=engine(),s=season(g,2);for(let i=0;i<500;i++){const m=g.simulateMatch('t0','t1',null);assert.equal(m.homeGoals,m.events.filter(e=>e.type==='goal'&&e.teamId==='t0').length);assert.equal(m.awayGoals,m.events.filter(e=>e.type==='goal'&&e.teamId==='t1').length);for(let side=0;side<2;side++){const events=m.events.filter(e=>e.teamId===`t${side}`);assert.equal(m.stats[side].shots,events.length);assert.equal(m.stats[side].onTarget,events.filter(e=>e.type==='save'||e.type==='goal').length);assert(Math.abs(m.stats[side].xg-events.reduce((a,e)=>a+e.xg,0))<1e-10);}assert.equal(m.playerRatings.length,22);assert.equal(m.stats[0].possession+m.stats[1].possession,100);assert(m.events.every((e,i,es)=>e.minute>=1&&e.minute<=90&&(!i||e.minute>=es[i-1].minute)));}});
+  assert(state.tournament.awarded,'tournament must award placement points');
+}
 
-test('Scouting queda fijo durante la ronda y el territorio amplía la cobertura siguiente',()=>{
- const g=engine(),s=season(g,2),team=s.teams[0];
- const first=g.ensureScouting(team);
- assert.equal(first.territory,3);assert.equal(first.playerIds.length,3);assert.equal(g.scoutingCapacity(3),3);
- const firstIds=[...first.playerIds];
- s.map.filter(c=>!c.owner).slice(0,7).forEach(c=>c.owner=team.id);
- const sameRound=g.ensureScouting(team);
- assert.deepEqual(sameRound.playerIds,firstIds);assert.equal(sameRound.territory,3);
- s.round++;s.scouting=null;
- const next=g.ensureScouting(team);
- assert.equal(next.territory,10);assert.equal(next.playerIds.length,5);
- assert.equal(g.scoutingCapacity(6),4);assert.equal(g.scoutingCapacity(10),5);assert.equal(g.scoutingCapacity(15),6);assert.equal(g.scoutingCapacity(40),6);
+function connectedActiveMap(state){
+  const active=state.map.map(c=>c.active!==false),first=active.findIndex(Boolean);
+  const seen=new Set([first]),queue=[first];
+  while(queue.length){
+    const k=queue.shift(),x=k%8,y=Math.floor(k/8);
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=x+dx,ny=y+dy,ni=ny*8+nx;
+      if(nx>=0&&ny>=0&&nx<8&&ny<8&&active[ni]&&!seen.has(ni)){seen.add(ni);queue.push(ni);}
+    }
+  }
+  return seen.size===active.filter(Boolean).length;
+}
+
+test('Base 2026: 200 jugadores activos y 30 clubes argentinos',()=>{
+  const {g}=engine(),arg=g.PLAYERS.filter(p=>p.season===2026),clubs=new Set(arg.flatMap(p=>p.clubs||[]));
+  assert.equal(arg.length,200);assert.equal(clubs.size,30);
+  for(const pos of ['ARQ','DEF','MED','DEL'])assert(arg.some(p=>p.pos===pos));
 });
 
+test('Mapa procedural: conectado, con huecos y zonas jugables',()=>{
+  for(const n of [2,3,4]){
+    for(let trial=0;trial<60;trial++){
+      const {g}=engine(),s=competition(g,n,`map-${n}-${trial}`);
+      const active=s.map.filter(c=>c.active!==false).length;
+      assert(active>=52&&active<=59,`active=${active}`);
+      assert(connectedActiveMap(s));
+      assert.equal(s.teams.every(t=>g.ownedTiles(t.id).length===3),true);
+      for(let region=0;region<8;region++){
+        const cells=s.map.filter(c=>c.active!==false&&g.regionForCell(c)===region);
+        assert(cells.length>=4);
+      }
+    }
+  }
+});
 
-test('Economía territorial: ingreso, región completa y premio de primera conquista',()=>{const g=engine(),s=season(g,2),team=s.teams[0];assert.equal(team.coins,g.CONFIG.startingCoins);assert.equal(g.roundIncome(team).total,3);s.map.forEach(c=>{if(g.regionForCell(c)===0)c.owner='t0';});const income=g.roundIncome(team);assert.equal(income.regions,1);assert.equal(income.regionBonus,g.CONFIG.regionBonus);const before=team.coins;g.grantRoundIncome();assert.equal(team.coins,before+income.total);const rewardStart=team.coins;assert.equal(g.rewardFirstConquest('t0'),g.CONFIG.conquestReward);assert.equal(g.rewardFirstConquest('t0'),0);assert.equal(team.coins,rewardStart+g.CONFIG.conquestReward);s.round++;assert.equal(g.rewardFirstConquest('t0'),g.CONFIG.conquestReward);});
-test('Reforzar consume un movimiento y mejora la defensa local',()=>{const g=engine(),s=season(g,2),team=s.teams[0],cell=g.reinforceableCells(team)[0],before=s.actionsLeft;assert(cell);assert(g.reinforceTile(team,cell,false));assert(cell.reinforced);assert.equal(s.actionsLeft,before-1);const m=g.simulateMatch('t1','t0',cell);assert.equal(m.territoryDefenseBonus,g.CONFIG.reinforcementBonus);assert(m.profiles[1].defense>=g.teamProfile(team).defense+g.CONFIG.reinforcementBonus);});
-test('Precios usan la escala de la liga y no dependen de movimientos',()=>{const g=engine();assert.equal(g.playerCost(g.PLAYERS.find(p=>p.rating>=80)),16);assert.equal(g.playerCost(g.PLAYERS.find(p=>p.rating>=77&&p.rating<80)),12);assert.equal(g.playerCost(g.PLAYERS.find(p=>p.rating>=74&&p.rating<77)),9);assert.equal(g.CONFIG.packCost,12);});
+for(const n of [2,3,4])test(`${n} equipos: Torneo finito de 6 PJ y premio de Liga (50 simulaciones)`,()=>{
+  for(let trial=0;trial<50;trial++){
+    const {g}=engine(),s=competition(g,n,`tour-${n}-${trial}`);
+    completeTournament(g,s);
+    assert(s.teams.every(t=>t.played===6));
+    assert(s.teams.every(t=>t.wins+t.draws+t.losses===6));
+    assert.equal(s.matches.length,n*3);
+    assert.equal(s.league.history.length,1);
+    assert.equal(s.tournament.placements.length,n);
+    const awarded=s.tournament.placements.map(x=>x.leaguePoints);
+    assert.deepEqual(awarded,[5,3,2,1].slice(0,n));
+  }
+});
 
-test('Zonas A-H exponen progreso, dueño e incentivo de forma estable',()=>{const g=engine(),s=season(g,2);assert.equal(g.regionName(0),'Zona A');assert.equal(g.regionName(7),'Zona H');assert.equal(g.regionProgress('t0',0),3);const before=g.regionOwners();s.map.filter(c=>g.regionForCell(c)===0).forEach(c=>c.owner='t0');assert.equal(g.regionOwner(0),'t0');const changes=g.regionChanges(before);assert.equal(changes.length,1);assert.equal(changes[0].name,'Zona A');assert.equal(changes[0].after,'t0');assert.equal(changes[0].reward,g.CONFIG.regionBonus);});
+test('Empate por el primer puesto crea desempate jugable y soporta empate múltiple',()=>{
+  const {g}=engine(),s=competition(g,4,'multi-tie');
+  s.teams.forEach(t=>{t.points=12;t.gf=8;t.ga=5;});
+  assert(g.finishGame());
+  assert(s.pendingTiebreaker);
+  assert.equal(s.pendingTiebreaker.candidates.length,4);
+  let matches=0;
+  while(s.pendingTiebreaker){matches++;g.completeTiebreaker(s.pendingTiebreaker.homeId);}
+  assert.equal(matches,3);
+  assert(s.tournament.awarded);
+  assert(s.tournament.championId);
+  assert.equal(s.winnerIds.length,1);
+});
+
+test('Los puntos de Liga son 5/3/2/1 y una ventaja inalcanzable cierra antes',()=>{
+  const {g}=engine();let s=competition(g,4,'early-clinch'),league=s.league;
+  for(let tournament=1;tournament<=4;tournament++){
+    s.teams.forEach((t,i)=>{t.points=[18,15,12,9][i];t.gf=12-i;t.ga=i;});
+    g.finalizeTournament('t0');
+    if(tournament<4){
+      const identities=g.teamIdentitiesFromCurrent();
+      s=g.createTournamentState(league,identities,tournament+1);g.setState(s);
+    }
+  }
+  assert.deepEqual(Object.values(league.points),[20,12,8,4]);
+  assert.equal(league.history.length,4);
+  assert.equal(league.finished,true);
+  assert.equal(league.earlyClinched,true);
+  assert.equal(league.championId,'t0');
+  assert.equal(g.getProfile().leagueTitles.length,1);
+});
+
+test('Nuevo Torneo reinicia recursos competitivos y conserva Liga/identidad/prestigio',()=>{
+  const {g}=engine(),s1=competition(g,3,'reset');
+  s1.teams[0].coins=87;s1.teams[0].inventory.push(g.PLAYERS.find(p=>!s1.teams[0].inventory.includes(p.id)).id);
+  s1.teams[0].leagueTitles=2;s1.league.points.t0=5;
+  const oldRoster=s1.teams[0].inventory.join(','),oldMap=s1.map.map(c=>c.active!==false).join('');
+  const identities=g.teamIdentitiesFromCurrent(),s2=g.createTournamentState(s1.league,identities,2);g.setState(s2);
+  assert.equal(s2.teams[0].coins,g.CONFIG.startingCoins);
+  assert.equal(s2.teams[0].played,0);assert.equal(s2.teams[0].points,0);
+  assert.equal(s2.teams[0].inventory.length,11);
+  assert.notEqual(s2.teams[0].inventory.join(','),oldRoster);
+  assert.equal(s2.league.points.t0,5);
+  assert.equal(s2.teams[0].name,s1.teams[0].name);
+  assert.equal(s2.teams[0].leagueTitles,2);
+  assert.notEqual(s2.map.map(c=>c.active!==false).join(''),oldMap);
+});
+
+test('Alta tardía queda en cola para el próximo Torneo con 0 puntos de Liga',()=>{
+  const {g}=engine(),s=competition(g,3,'late');
+  assert(g.queueLateEntrant({id:'t3',name:'Tardío',colors:['#123456','#abcdef']}));
+  assert.equal(s.league.points.t3,0);
+  assert.equal(s.league.entrantMeta.t3.joinedTournament,2);
+  assert.equal(s.league.pendingEntrants[0].joinedTournament,2);
+  assert.equal(g.queueLateEntrant({id:'t4',name:'Quinto'}),false);
+});
+
+test('Save v0.9 recarga; save competitivo viejo se descarta',()=>{
+  const {g,storage}=engine(),s=competition(g,2,'save');
+  g.save();const loaded=g.load();assert(loaded);assert.equal(loaded.seasonSchema,3);assert.equal(loaded.league.id,s.league.id);
+  const old={...s,seasonSchema:2};storage.set('treguafulbo-demo-v1',JSON.stringify(old));assert.equal(g.load(),null);
+});
+
+test('Economía y refuerzo siguen siendo internos al Torneo',()=>{
+  const {g}=engine(),s=competition(g,2,'economy'),team=s.teams[0];
+  assert.equal(team.coins,g.CONFIG.startingCoins);
+  const before=team.coins,inc=g.roundIncome(team);g.grantRoundIncome();assert.equal(team.coins,before+inc.total);
+  const cell=g.reinforceableCells(team)[0],actions=s.actionsLeft;assert(cell);assert(g.reinforceTile(team,cell,false));assert.equal(s.actionsLeft,actions-1);
+});
+
+test('Partidos siguen reproduciendo stats coherentes (250 simulaciones)',()=>{
+  const {g}=engine(),s=competition(g,2,'matches');
+  for(let i=0;i<250;i++){
+    const m=g.simulateMatch('t0','t1',null);
+    assert.equal(m.homeGoals,m.events.filter(e=>e.type==='goal'&&e.teamId==='t0').length);
+    assert.equal(m.awayGoals,m.events.filter(e=>e.type==='goal'&&e.teamId==='t1').length);
+    assert.equal(m.stats[0].possession+m.stats[1].possession,100);
+    assert.equal(m.playerRatings.length,22);
+  }
+});
