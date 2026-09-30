@@ -294,7 +294,7 @@
       if(!raw){raw=localStorage.getItem(LEGACY_SAVE_KEY);fromLegacy=!!raw;}
       if(!raw)return null;
       const parsed=JSON.parse(raw);
-      if(!parsed||!Array.isArray(parsed.teams)||parsed.teams.length<2||parsed.teams.length>4||!parsed.teams.some(t=>t.human)||!Array.isArray(parsed.map)||parsed.map.length!==CONFIG.gridSize**2)return null;
+      if(!parsed||parsed.seasonSchema!==3||!Array.isArray(parsed.teams)||parsed.teams.length<2||parsed.teams.length>4||!parsed.teams.some(t=>t.human)||!Array.isArray(parsed.map)||parsed.map.length!==CONFIG.gridSize**2)return null;
       parsed.version=VERSION;
       parsed.events=Array.isArray(parsed.events)?parsed.events:[];
       parsed.matches=Array.isArray(parsed.matches)?parsed.matches:[];
