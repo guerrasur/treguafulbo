@@ -2,7 +2,7 @@
 
 ## Producto
 
-Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.6.0 es local: 1 humano y 1–3 rivales simulados.
+Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.9.0 es local: 1 humano y 1–3 rivales simulados. La estructura competitiva usa Torneos dentro de una Liga persistente.
 
 ## NEXO
 
@@ -14,6 +14,23 @@ Jugar sin presión, poder observar y pensar, y cerrar el turno de forma voluntar
 - Inspeccionar mapa, plantel, liga y reglas es gratis.
 - Conservar entre actualizaciones y nuevas partidas el último nombre de club y los dos colores elegidos por el jugador.
 - El multiplayer futuro debe resumir lo sucedido desde la última visita.
+
+## v0.9.0 — Liga persistente y Torneos
+
+- Jerarquía vigente: **Partido → Torneo → Liga → Prestigio**.
+- Un Torneo conserva el calendario de **6 PJ por equipo**, con 3 puntos por victoria, 1 por empate y 0 por derrota.
+- Una Liga contiene hasta **5 Torneos**. Cada cierre entrega puntos de Liga por posición: **1.º +5, 2.º +3, 3.º +2, 4.º +1**.
+- La Liga termina al completar 5 Torneos o antes si el líder ya es matemáticamente inalcanzable.
+- Si el primer puesto de un Torneo queda empatado en puntos, NO definir campeón por DG/GF: jugar desempate. Si el desempate empata, resolver por penales. Los empates múltiples usan una serie sembrada por criterios secundarios.
+- Los penales guardan elecciones ocultas de **patear** y **atajar** y las revelan juntas. La demo offline completa la elección rival con IA; el futuro online debe esperar ambas selecciones sin revelar una antes de tiempo.
+- Al iniciar cada Torneo se reinician **plantel, monedas, tabla del Torneo, mapa, mercado/scouting y calendario**. El nombre/colores del club y el prestigio no se reinician.
+- Cada Torneo genera una **silueta procedural conectada** del tablero. Las zonas A–H se calculan sólo con sus casillas activas.
+- Cada Liga recibe un nombre temático procedural basado en una lista curada de pueblos/culturas originarias latinoamericanas. No inventar etnónimos.
+- Ganar una Liga sólo entrega **prestigio estético**: trofeo/badge y contador de Ligas ganadas. Nunca dar bonus de stats, economía, plantel o probabilidades.
+- Al comenzar un Torneo, mostrar el XI inicial antes del mapa. **Asignar automáticamente** debe informar explícitamente quién entra y quién sale.
+- Los saves competitivos anteriores a v0.9.0 pueden invalidarse deliberadamente durante la demo. Mantener aparte identidad del club y progreso estético.
+- Preparación online: `league.id` identifica cada mundo; `entrantMeta` registra desde qué Torneo participa cada equipo y `pendingEntrants` permite altas sólo entre Torneos. El backend futuro debe permitir que un usuario pertenezca a varias Ligas simultáneas, cada una con su propio estado.
+- La demo offline mantiene una sola Liga activa a la vez; no simular multijugador/backend que todavía no existe.
 
 ## Dirección visual
 
@@ -30,7 +47,7 @@ Usar texto mínimo, neutro, directo y funcional. Evitar jerga, chistes, tono can
 - Los goles deben frenar brevemente la reproducción y tener énfasis visual.
 - En cruces territoriales, el invasor se presenta como **Visitante** y el defensor como **Local**. Es una regla temática/visual: NO modifica stats, probabilidades ni simulación.
 - Antes de un partido, mostrar claramente el progreso del frente y qué casilla puede dispararlo.
-- Mantener **Mejor XI** como acción gratuita de gestión del plantel: debe escoger los mejores futbolistas disponibles para ARQ/DEF/MED/DEL respetando posiciones.
+- Mantener **Asignar automáticamente** como acción gratuita de gestión del plantel: debe escoger los mejores futbolistas disponibles para ARQ/DEF/MED/DEL respetando posiciones y mostrar quién entra/sale.
 
 ## Dirección actual de partidos
 
@@ -81,17 +98,17 @@ Antes de implementar esta dirección hay que prototipar por separado al menos: r
 - Abrir paquetes, fichar o gestionar plantel no debe dejar el mapa en un modo que bloquee la expansión posterior.
 - Mantener el orden visual del turno: HUD esencial → liga → frente → mapa → acciones frecuentes. AVG global y eventos son información secundaria y pueden estar plegados.
 - En mobile, preservar touch targets de al menos ~44 px para acciones principales y evitar overflow horizontal.
-- No alterar por cambios de interfaz: 6 PJ, fixtures, simulación, stats, balance, resolución territorial ni esquema del save.
+- No alterar por cambios de interfaz: 6 PJ por Torneo, fixtures, simulación, stats, balance ni resolución territorial. El esquema competitivo v0.9.0 puede invalidar saves demo anteriores deliberadamente.
 
 ## v0.6.0 — invariantes vigentes
 
 - Integra la actualización paralela `07e2be2`. Mantener la cola persistente de partidos recibidos y su reproducción antes del resumen.
-- **Final confirmado por el usuario:** liga con exactamente 6 partidos por equipo; la condición territorial de v0.5.1 queda reemplazada. Ningún equipo se elimina de la liga por tener 0 casillas.
+- **Histórico v0.6.0:** lo que entonces se llamaba Liga de 6 PJ ahora es un **Torneo** dentro de la Liga persistente de v0.9.0. Ningún equipo se elimina del Torneo por tener 0 casillas.
 - Calendario de seis PJ con cuotas por pareja. Cruces por presión y disputa cuentan; el cierre de ronda completa cruces pendientes sin necesitar contacto territorial. No exceder el calendario.
-- Clasificación: puntos, DG, GF y minitabla entre equipos empatados. Compartir posición ante igualdad absoluta; no inventar desempates por territorio o por orden de equipo.
+- Clasificación interna del Torneo: puntos, DG, GF y minitabla sirven para posiciones secundarias y siembra. El primer puesto empatado en puntos se define jugando un desempate y, si hace falta, penales.
 - Guardar `pendingMatch` con resultado y eventos ya simulados antes de abrir previa. En recarga, reanudar ese encuentro, sin volver a simular ni cobrar otra acción. Resolver y premiar una sola vez.
 - Premios y álbum persistentes son cosméticos/de registro. Nuevas ligas conservan la igualdad de planteles de inicio. No otorgar ventajas estadísticas por XP o medallas.
-- No gastar acción en paquete sin jugadores disponibles; no entregar duplicados del plantel. Mercado y paquete siguen consumiendo una acción, sin moneda.
+- No gastar movimiento territorial en paquete o mercado. Ambos usan monedas; no entregar duplicados del plantel.
 - Previa explícita antes de reproducir. Cancha ilustrativa de eventos, sin motor físico ni controles de jugadas. Pausa y ritmo son controles de visualización.
 - Mantener los 22 rendimientos y todos los datos del informe. Una repetición no modifica tabla, territorios ni recompensas.
 - Respetar `prefers-reduced-motion`, sonido optativo y versión siempre visible debajo del título en móvil.
@@ -131,7 +148,7 @@ Antes de implementar esta dirección hay que prototipar por separado al menos: r
 - Base visual, mapa, navegación, plantel, mercado, IA y flujo de v0.1 conservados.
 - Atributos ATQ/PAS/DEF/ARQ y penalización por fuera de posición.
 - Simulación avanzada e informe ampliado.
-- Save actual `treguafulbo-demo-v1`, con migración no destructiva desde `trucebol-demo-v1`.
+- Save competitivo actual `treguafulbo-demo-v1` con `seasonSchema: 3`. En demo, saves competitivos viejos pueden reiniciarse; identidad del club y progreso estético usan almacenamiento separado.
 
 ## v0.1.0
 
