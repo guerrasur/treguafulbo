@@ -2,6 +2,17 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.5.0
+
+- corrige el bloqueo de turno cuando un equipo queda encerrado antes de que el tablero esté completo: si ya no tiene expansión libre, puede disputar una frontera rival;
+- una partida nueva siempre vuelve a **Expandir** y recupera saves que hayan quedado accidentalmente en un turno de IA;
+- la previa y las casillas ⚽ usan el mismo rival determinista, evitando anunciar un cruce y resolver otro;
+- en partidos visibles, tabla, goleadores y territorio se aplican recién al llegar a **FINAL**; Escape no puede cortar la reproducción antes de ese punto;
+- el xG se conserva con precisión interna y sólo se redondea al mostrarlo, para que el minuto a minuto coincida con el total final;
+- **Mejor XI** prioriza el mayor AVG/rating dentro de cada posición natural y mantiene la reorganización gratuita;
+- el ritmo minuto a minuto se ajustó para mejorar la lectura sin dejar de ser acelerado;
+- se aclaró la diferencia entre empate por presión territorial y empate en disputa directa.
+
 ## v0.4.1
 
 - el resumen de ronda ya no informa coordenadas o sectores concretos de expansión;
@@ -65,7 +76,7 @@ Demo offline de fútbol y conquista territorial.
 - Inicio: 3 casillas por equipo.
 - Economía: todavía no implementada. Fichar o abrir paquete consume 1 acción y no dinero.
 - Partido: se muestra al generarse y luego continúa el turno.
-- Empate: la zona se divide entre ambos equipos.
+- Empate: en un cruce por presión territorial, la zona se divide; en una disputa directa de frontera, la casilla defendida no cambia de dueño.
 
 ## Dirección visual
 
