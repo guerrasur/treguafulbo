@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#153b55" />
   <title>Treguafulbo</title>
   <meta name="description" content="Demo offline de Treguafulbo: fútbol y territorio." />
-  <link rel="stylesheet" href="styles.css?v=0.6.2" />
+  <link rel="stylesheet" href="styles.css?v=0.6.3" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.6.2</small>
+        <small id="versionLabel">v0.6.3</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,7 +35,7 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.6.2</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.6.3</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -156,7 +156,17 @@
         <div class="league-rules-note">6 partidos por equipo · Victoria 3 puntos · Empate 1 · Derrota 0</div>
         <div class="league-secondary-grid"><section class="panel-card scorers-card"><div class="panel-heading mini"><div><span class="panel-kicker">GOLEADORES</span><h3>Máximos goleadores</h3></div></div><div id="scorers"></div></section><div id="fixtureList" class="fixture-list panel-card"></div></div>
       </section>
-    <section id="albumScreen" class="screen sub-screen hidden"><div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PROGRESO PERSONAL</span><h2>Álbum y premios</h2></div></div><div id="careerStats" class="notice-card"></div><div class="rules-note">El álbum y los premios se conservan entre partidas. Cada liga empieza con un plantel nuevo: no dan ventajas.</div><div id="trophyCabinet" class="trophy-cabinet"></div><div id="albumGrid" class="album-grid"></div></section>
+    <section id="albumScreen" class="screen sub-screen hidden">
+      <div class="sub-header album-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PROGRESO PERSONAL</span><h2>Álbum</h2></div></div>
+      <div id="careerStats" class="album-summary panel-card"></div>
+      <section class="album-toolbar panel-card compact">
+        <div class="album-toolbar-copy"><span class="panel-kicker">COLECCIÓN</span><strong id="albumCount">—</strong><small>Se conserva entre partidas y no mejora futuros planteles.</small></div>
+        <label>Posición<select id="albumPositionFilter"><option value="all">Todas</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label>
+        <label>Rareza<select id="albumRarityFilter"><option value="all">Todas</option><option value="base">★ Base</option><option value="rare">★★ Destacado</option><option value="epic">★★★ Épico</option><option value="legend">★★★★ Legendario</option></select></label>
+      </section>
+      <details class="secondary-panel album-awards"><summary><span>Premios</span><small id="trophyCount">0 ligas</small></summary><div id="trophyCabinet" class="trophy-cabinet"></div></details>
+      <div id="albumGrid" class="album-grid"></div>
+    </section>
     </main>
 
     <nav id="bottomNav" class="bottom-nav hidden" aria-label="Navegación principal">
@@ -200,7 +210,7 @@
   <dialog id="packDialog" class="game-dialog pack-dialog">
     <div class="dialog-heading"><div><span class="panel-kicker">PAQUETE</span><h2 id="acquisitionTitle">Jugadores</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
     <div id="packIntro"></div><div id="packResults" class="pack-results"></div>
-    <button id="revealAllButton" class="secondary-button large">Revelar todos</button><button class="primary-button large" data-close-dialog>Continuar</button>
+    <div class="pack-actions"><button id="revealAllButton" class="secondary-button">Revelar todos</button><button class="primary-button" data-close-dialog>Continuar</button></div>
   </dialog>
 
   <dialog id="summaryDialog" class="game-dialog summary-dialog">
@@ -216,6 +226,6 @@
     <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
   </dialog>
 
-  <script src="game.js?v=0.6.2" defer></script>
+  <script src="game.js?v=0.6.3" defer></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.6.2';
+  const VERSION = '0.6.3';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -168,10 +168,29 @@
   function renderCareerHome(){
     const b=$('#careerHome');if(!b)return;b.textContent=`Nivel ${careerLevel()} · Álbum ${profile.collection.length}/${PLAYERS.length} · ${profile.completed.length} ligas completadas`;
   }
+  function albumCard(p,discovered){
+    const rare=rarity(p),card=el('article',`album-player-card rarity-${rare.key}${discovered?'':' locked'}`),head=el('div','album-card-head');
+    head.append(el('span',`position-badge pos-${p.pos}`,p.pos),el('b','album-card-rating',discovered?p.rating:'?'));card.append(head);
+    if(!discovered){
+      card.setAttribute('aria-label',`Por descubrir: ${p.pos}`);
+      card.append(el('strong','album-card-name','Por descubrir'),el('small','album-card-rarity','Carta bloqueada'));
+      return card;
+    }
+    const name=el('div','album-card-name-line');name.append(el('strong','album-card-name',p.name),el('span','rarity-stars',rare.symbol));card.append(name,el('small','album-card-rarity',rare.label));
+    const skills=playerSkills(p),stats=el('div','album-card-stats');
+    [['ATQ',skills.attack],['PAS',skills.passing],['DEF',skills.defense],['ARQ',skills.keeping]].forEach(([key,value])=>{const stat=el('span');stat.append(el('i','',key),el('b','',value));stats.append(stat);});card.append(stats);
+    return card;
+  }
   function renderAlbum(){
-    $('#careerStats').textContent=`Nivel ${careerLevel()} · ${profile.xp} XP · Álbum ${profile.collection.length}/${PLAYERS.length} · ${profile.completed.length} ligas`;
-    const cabinet=$('#trophyCabinet');cabinet.innerHTML='';profile.completed.slice(-8).reverse().forEach(s=>{const b=el('div','trophy-tile');b.append(medalBadge(s.rank),el('strong','',s.name),el('small','',`${s.rank}º lugar · ${s.points} PTS`));cabinet.append(b);});if(!cabinet.children.length)cabinet.append(el('div','rules-note','Completá una liga para registrar tu primer premio.'));
-    const grid=$('#albumGrid');grid.innerHTML='';PLAYERS.forEach(p=>{const card=playerCard(p);if(!profile.collection.includes(p.id)){card.classList.add('undiscovered');card.setAttribute('aria-label',`Por descubrir: ${p.pos}`);card.innerHTML='';card.append(el('b','unknown-symbol','?'),el('strong','',p.pos),el('small','','Por descubrir'));}grid.append(card);});
+    const discovered=new Set(profile.collection),position=$('#albumPositionFilter')?.value||'all',rareFilter=$('#albumRarityFilter')?.value||'all';
+    const stats=$('#careerStats');stats.innerHTML='';
+    [['NIVEL',careerLevel()],['XP',profile.xp],['ÁLBUM',`${discovered.size}/${PLAYERS.length}`],['LIGAS',profile.completed.length]].forEach(([label,value])=>{const box=el('div','album-stat');box.append(el('span','',label),el('b','',value));stats.append(box);});
+    const cabinet=$('#trophyCabinet');cabinet.innerHTML='';profile.completed.slice(-8).reverse().forEach(s=>{const tile=el('div','trophy-tile');tile.append(medalBadge(s.rank),el('strong','',s.name),el('small','',`${s.rank}º · ${s.points} PTS`));cabinet.append(tile);});
+    if(!cabinet.children.length)cabinet.append(el('div','album-empty','Todavía no hay premios.'));
+    const trophyCount=$('#trophyCount');if(trophyCount)trophyCount.textContent=`${profile.completed.length} ${profile.completed.length===1?'liga':'ligas'}`;
+    const shown=PLAYERS.filter(p=>(position==='all'||p.pos===position)&&(rareFilter==='all'||rarity(p).key===rareFilter));
+    const count=$('#albumCount');if(count)count.textContent=`${shown.length} cartas · ${shown.filter(p=>discovered.has(p.id)).length} descubiertas`;
+    const grid=$('#albumGrid');grid.innerHTML='';shown.forEach(p=>grid.append(albumCard(p,discovered.has(p.id))));
   }
   function toast(text){let node=$('#toast');if(!node){node=el('div','toast');node.id='toast';node.setAttribute('role','status');node.setAttribute('aria-live','polite');document.body.append(node);}node.textContent=text;node.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.classList.remove('visible'),2600);}
   function updateSoundButton(){const b=$('#soundButton');if(!b)return;b.textContent=profile.sound?'♫':'♪';b.setAttribute('aria-pressed',String(profile.sound));b.setAttribute('aria-label',profile.sound?'Desactivar sonido':'Activar sonido');b.title=profile.sound?'Sonido activado':'Sonido desactivado';}
@@ -552,8 +571,12 @@
   }
   function showAcquisition(picks,title,concealed){
     $('#acquisitionTitle').textContent=title;const results=$('#packResults');results.innerHTML='';
-    $('#packIntro').innerHTML='';$('#packIntro').append(el('div','rules-note',concealed?'Tocá cada carta para revelarla. Los jugadores ya están guardados en tu plantel.':'El jugador ya está guardado en tu banco.'));
-    if(concealed){const available=PLAYERS.filter(p=>!humanTeam().inventory.includes(p.id)||picks.some(pick=>pick.id===p.id)),total=available.reduce((sum,p)=>sum+packWeight(p),0);const odds=['base','rare','epic','legend'].map(key=>{const ps=available.filter(p=>rarity(p).key===key);return ps.length?`${rarity(ps[0]).label} ${Math.round(ps.reduce((sum,p)=>sum+packWeight(p),0)/total*100)}%`:null;}).filter(Boolean);$('#packIntro').append(el('small','pack-odds',`Probabilidad de la primera carta: ${odds.join(' · ')}. Cambia con los jugadores disponibles.`));}
+    const intro=$('#packIntro');intro.innerHTML='';
+    const info=el('div','pack-info');info.append(el('strong','',concealed?`${picks.length} jugadores nuevos`:'Jugador incorporado'),el('small','',concealed?'Tocá las cartas para revelarlas. Ya están guardadas en tu plantel.':'Ya está guardado en tu banco.'));intro.append(info);
+    if(concealed){
+      const available=PLAYERS.filter(p=>!humanTeam().inventory.includes(p.id)||picks.some(pick=>pick.id===p.id)),total=available.reduce((sum,p)=>sum+packWeight(p),0),odds=el('div','pack-odds-grid');
+      ['base','rare','epic','legend'].forEach(key=>{const ps=available.filter(p=>rarity(p).key===key);if(!ps.length)return;const pct=Math.round(ps.reduce((sum,p)=>sum+packWeight(p),0)/total*100),r=rarity(ps[0]),chip=el('div',`pack-odd rarity-${key}`);chip.append(el('span','',r.symbol),el('strong','',`${pct}%`),el('small','',r.label));odds.append(chip);});intro.append(odds);
+    }
     $('#revealAllButton').classList.toggle('hidden',!concealed);
     picks.forEach((p,i)=>{
       const card=playerCard(p,'pack-card');card.style.setProperty('--card-delay',`${i*60}ms`);
@@ -768,6 +791,22 @@
     if(e.type==='block')return `Remate de ${e.playerName} · bloqueado por ${e.defenderName}`;
     return `Remate de ${e.playerName} · afuera`;
   }
+  function matchGoalEvents(match){
+    const events=(match.events||[]).filter(e=>e.type==='goal');
+    const source=events.length?events:(match.goals||[]);
+    return source.map(g=>({teamId:g.teamId,playerName:g.playerName||playerById(g.playerId)?.name||'Gol',minute:Number(g.minute)||0})).sort((a,b)=>a.minute-b.minute);
+  }
+  function matchGoalsSummary(match,home,away){
+    const wrap=el('section','match-goals-summary'),title=el('div','match-goals-title');title.append(el('span','panel-kicker','GOLES'),el('strong','',match.homeGoals||match.awayGoals?'Goleadores':'Sin goles'));wrap.append(title);
+    const goals=matchGoalEvents(match),grid=el('div','match-goals-grid');
+    [home,away].forEach(team=>{
+      const side=el('div','match-goal-team');side.append(el('strong','match-goal-team-name',team.name));
+      const list=goals.filter(g=>g.teamId===team.id);
+      if(!list.length)side.append(el('small','match-no-goals','Sin goles'));
+      else list.forEach(goal=>{const row=el('div','goal-summary-row');row.append(el('b','',`${goal.minute}'`),el('span','',goal.playerName));side.append(row);});
+      grid.append(side);
+    });wrap.append(grid);return wrap;
+  }
   function showMatch(match,onFinal=null,onClose=null){
     const dialog=$('#matchDialog');if(dialog.open)return;
     const isReplay=state.matches.some(m=>m.id===match.id);
@@ -831,7 +870,7 @@
       if(match.stats){$('#liveShotsHome').textContent=match.stats[0].shots;$('#liveShotsAway').textContent=match.stats[1].shots;$('#liveTargetHome').textContent=match.stats[0].onTarget;$('#liveTargetAway').textContent=match.stats[1].onTarget;$('#liveXgHome').textContent=match.stats[0].xg.toFixed(1);$('#liveXgAway').textContent=match.stats[1].xg.toFixed(1);const possession=el('div','match-stat');possession.append(el('b','',`${match.stats[0].possession}%`),el('span','','Posesión'),el('b','',`${match.stats[1].possession}%`));liveStats.insertBefore(possession,liveStats.children[1]);}
       finalBox.classList.remove('hidden');
       const human=humanTeam(),involved=match.homeId===human.id||match.awayId===human.id,won=involved&&match.result===(match.homeId===human.id?'home':'away'),draw=match.result==='draw';
-      const result=el('div',`result-banner ${draw?'draw':won?'win':'loss'}`);result.append(el('strong','',involved?(draw?'Empate':won?'Victoria':'Derrota'):'Resultado'),el('span','',`${involved?(draw?'+1 punto':won?'+3 puntos':'0 puntos'):'Liga'}${match.countsForLeague===false?' · Amistoso':''}${involved&&match.xp?` · +${match.xp} XP`:''}`));finalBox.append(result);if(isReplay)finalBox.append(el('small','rules-note','Resultado y premios ya registrados.'));
+      const result=el('div',`result-banner ${draw?'draw':won?'win':'loss'}`);result.append(el('strong','',involved?(draw?'Empate':won?'Victoria':'Derrota'):'Resultado'),el('span','',`${involved?(draw?'+1 punto':won?'+3 puntos':'0 puntos'):'Liga'}${match.countsForLeague===false?' · Amistoso':''}${involved&&match.xp?` · +${match.xp} XP`:''}`));finalBox.append(result,matchGoalsSummary(match,home,away));if(isReplay)finalBox.append(el('small','rules-note','Resultado y premios ya registrados.'));
       if(involved&&Number.isFinite(match.territoryDelta))finalBox.append(el('div','rules-note',`Territorio: ${match.territoryDelta>0?'+':''}${match.territoryDelta} casillas`));
       if(match.star){const star=el('div','match-star'),info=el('div');info.append(el('span','panel-kicker','FIGURA'),el('strong','',match.star.name),el('small','',`${state.teams.find(t=>t.id===match.star.teamId)?.name||''} · ${match.star.pos} · ${match.star.goals} G · ${match.star.assists} A`));star.append(info,el('b','',String(match.star.rating)));finalBox.append(star);}
       if(match.playerRatings?.length){const details=el('details','match-ratings');details.append(el('summary','match-section-title','Rendimientos de los 22 jugadores'));match.playerRatings.forEach(p=>{const row=el('div','rating-row');row.append(el('span','',`${p.name} · ${state.teams.find(t=>t.id===p.teamId)?.name||''}`),el('b','',String(p.rating)));details.append(row);});finalBox.append(details);}
@@ -938,7 +977,7 @@
   function init(){
     $('#versionLabel').textContent=`v${VERSION}`;$('.eyebrow').textContent=`DEMO OFFLINE · v${VERSION}`; updateContinue(); checkLatestVersion();renderCareerHome();
     $('#soundButton').addEventListener('click',toggleSound);updateSoundButton();
-    $('#positionFilter').addEventListener('change',renderSquad);$('#marketFilter').addEventListener('change',renderMarket);
+    $('#positionFilter').addEventListener('change',renderSquad);$('#marketFilter').addEventListener('change',renderMarket);$('#albumPositionFilter').addEventListener('change',renderAlbum);$('#albumRarityFilter').addEventListener('change',renderAlbum);
     $('#albumButton').addEventListener('click',()=>openScreen('albumScreen'));
     $('#revealAllButton').addEventListener('click',()=>{$$('#packResults .concealed').forEach(c=>revealCard(c,playerById(c.dataset.playerId)));$('#packResults').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});});
     $('#updateButton').addEventListener('click',installUpdate);
