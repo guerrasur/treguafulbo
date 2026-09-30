@@ -2,6 +2,11 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.2.1
+
+- botón **Actualizar** en la barra superior cuando `version.json` detecta una versión nueva;
+- la actualización fuerza una recarga sin caché y conserva la partida guardada.
+
 ## v0.2.0
 
 - mantiene la demo y el flujo existente de Treguafulbo;
