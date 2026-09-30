@@ -1,5 +1,15 @@
 # Treguafulbo
 
+## v0.7.2
+
+- las 8 regiones ahora se identifican como **Zona A–H** directamente en el mapa;
+- debajo del mapa se ve el progreso de cada zona, quién la domina y su incentivo **+3 monedas/ronda**;
+- completar una zona genera feedback visible inmediato y un evento específico;
+- perder una zona informa claramente la pérdida del ingreso;
+- los resultados de partido muestran si el encuentro hizo ganar o perder una zona;
+- el resumen de ronda informa cambios de dominio causados por rivales;
+- no cambia el balance económico de v0.7.0/0.7.1.
+
 ## v0.7.1
 
 Hotfix de render:
