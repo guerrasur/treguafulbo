@@ -2,7 +2,7 @@
 
 ## Producto
 
-Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.1.0 es local: 1 humano y 1–3 rivales simulados.
+Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.4.0 es local: 1 humano y 1–3 rivales simulados.
 
 ## NEXO
 
@@ -60,6 +60,16 @@ Flujo tentativo:
 Problema técnico principal: para que funcione bien no alcanza con agregar botones o QTE simples. Requiere diseñar una capa sólida de minijuegos de fútbol, generación de situaciones, física/inputs, dificultad ligada a stats, persistencia asincrónica y resolución determinista/justa entre ambos turnos.
 
 Antes de implementar esta dirección hay que prototipar por separado al menos: remate al arco, pase/centro y cómo se generan/distribuyen las oportunidades según AVG, sin comprometer todavía el sistema de liga ni el mapa.
+
+## v0.4.0
+
+- La expansión normal sigue usando casillas libres.
+- Cuando **todo el tablero está ocupado**, el juego entra en una fase de frontera activa: una casilla rival adyacente marcada con ⚽ puede disputarse gastando 1 acción.
+- En una disputa directa, victoria del atacante = captura de la casilla elegida; empate o derrota = la casilla permanece en manos del defensor.
+- Mantener como regla de seguridad un solo cruce entre la misma pareja de equipos por ronda.
+- La IA debe poder disputar fronteras cuando no quedan casillas libres.
+- El AVG general del XI debe ser un dato de primer nivel: visible en mapa, Plantel, comparación de rivales, Liga y contexto previo al partido.
+- Plantel debe priorizar legibilidad: cabecera con escudo + AVG general + posición/PJ/PTS, resumen ATQ/MED/DEF/ARQ, titulares agrupados por puesto y banco separado.
 
 ## v0.2.0
 
