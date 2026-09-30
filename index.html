@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#153b55" />
   <title>Treguafulbo</title>
   <meta name="description" content="Demo offline de Treguafulbo: fútbol y territorio." />
-  <link rel="stylesheet" href="styles.css?v=0.6.3" />
+  <link rel="stylesheet" href="styles.css?v=0.7.2" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.7.1</small>
+        <small id="versionLabel">v0.7.2</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,7 +35,7 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.7.1</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.7.2</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -51,7 +51,7 @@
             <div class="turn-team-copy">
               <span class="status-kicker">MI EQUIPO</span>
               <strong id="currentTeamLabel">—</strong>
-              <div class="team-metrics"><span>AVG <b id="teamAvg">—</b></span><span>Territorio <b id="territoryCount">—</b></span><span>Monedas <b id="coinCount">—</b></span><span>Regiones <b id="regionCount">—</b></span></div>
+              <div class="team-metrics"><span>AVG <b id="teamAvg">—</b></span><span>Territorio <b id="territoryCount">—</b></span><span>Monedas <b id="coinCount">—</b></span><span>Zonas <b id="regionCount">—</b></span></div>
               <span id="turnTeamName" class="sr-only">—</span>
             </div>
           </div>
@@ -75,6 +75,10 @@
               <div class="map-stage">
                 <div id="map" class="map-grid" role="grid" aria-label="Mapa de Treguafulbo"></div>
                 <div class="map-hint" id="mapHint">Expandir activo · tocá una casilla libre marcada.</div>
+                <section class="region-overview" aria-label="Zonas e incentivos">
+                  <div class="region-overview-head"><strong>Zonas</strong><small>8 casillas cada una · +3 monedas/ronda</small></div>
+                  <div id="regionOverview" class="region-grid"></div>
+                </section>
               </div>
 
               <aside class="map-rail">
@@ -196,7 +200,7 @@
       <li><b>Objetivo.</b> Terminar primero en la liga. Cada equipo completa exactamente 6 partidos.</li>
       <li><b>Movimientos.</b> Tenés 3 por turno. Podés expandirte a una casilla libre, atacar una casilla rival adyacente o reforzar una casilla propia de frontera.</li>
       <li><b>Monedas.</b> Fichajes y paquetes se pagan con monedas y no gastan movimientos. Empezás con 30.</li>
-      <li><b>Ingresos.</b> Al iniciar una nueva ronda cobrás por territorio. Cada región completa de 8 casillas agrega +3 monedas.</li>
+      <li><b>Zonas.</b> El mapa se divide en A–H. Cada zona tiene 8 casillas y, mientras la controles completa, genera +3 monedas por ronda. El panel bajo el mapa muestra el progreso de cada una.</li>
       <li><b>Conquista.</b> La primera casilla rival que conquistás en una ronda entrega +5 monedas. Conquistas posteriores de esa ronda no repiten el premio.</li>
       <li><b>Dado.</b> Al empezar cada ronda se tira un dado virtual. Sólo modifica un pequeño bonus de monedas; nunca decide partidos.</li>
       <li><b>Refuerzo.</b> Una casilla reforzada da +4 DEF local cuando es atacada. El refuerzo desaparece si la casilla cambia de dueño.</li>
