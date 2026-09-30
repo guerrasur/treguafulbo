@@ -756,9 +756,9 @@
   function resumeTurnIntro(){
     if(!state)return;
     if(state.pendingMatch){showPendingMatch();return;}
-    if(state.pendingTiebreaker&&showTiebreakerFlow())return;
     const queue=state.pendingHumanMatchIds||(state.pendingHumanMatchIds=[]);
     while(queue.length){const id=queue[0],match=state.matches.find(m=>m.id===id);if(!match){queue.shift();continue;}save();showMatch(match,null,()=>{if(state.pendingHumanMatchIds&&state.pendingHumanMatchIds[0]===id)state.pendingHumanMatchIds.shift();save();resumeTurnIntro();});return;}
+    if(state.pendingTiebreaker&&showTiebreakerFlow())return;
     save();render();if(showTurnSummary())return;if(showRosterIntro())return;if(state.finished)showGameOver();
   }
 
