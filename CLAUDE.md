@@ -61,6 +61,15 @@ Problema técnico principal: para que funcione bien no alcanza con agregar boton
 
 Antes de implementar esta dirección hay que prototipar por separado al menos: remate al arco, pase/centro y cómo se generan/distribuyen las oportunidades según AVG, sin comprometer todavía el sistema de liga ni el mapa.
 
+## v0.6.1 — invariantes de UX
+
+- El mapa es la acción territorial por defecto. **No exigir un selector/bandera de Expandir** para ocupar una casilla libre válida ni para disputar una frontera habilitada.
+- Al volver a `gameScreen` desde Plantel, Liga, Mercado o Álbum, restablecer `activeAction='expand'`.
+- Abrir paquetes, fichar o gestionar plantel no debe dejar el mapa en un modo que bloquee la expansión posterior.
+- Mantener el orden visual del turno: HUD esencial → liga → frente → mapa → acciones frecuentes. AVG global y eventos son información secundaria y pueden estar plegados.
+- En mobile, preservar touch targets de al menos ~44 px para acciones principales y evitar overflow horizontal.
+- No alterar por cambios de interfaz: 6 PJ, fixtures, simulación, stats, balance, resolución territorial ni esquema del save.
+
 ## v0.6.0 — invariantes vigentes
 
 - Integra la actualización paralela `07e2be2`. Mantener la cola persistente de partidos recibidos y su reproducción antes del resumen.
