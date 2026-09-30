@@ -61,13 +61,15 @@ Problema técnico principal: para que funcione bien no alcanza con agregar boton
 
 Antes de implementar esta dirección hay que prototipar por separado al menos: remate al arco, pase/centro y cómo se generan/distribuyen las oportunidades según AVG, sin comprometer todavía el sistema de liga ni el mapa.
 
-## v0.8.0 — base argentina 2026
+## v0.8.1 — base argentina 2026 (200 cartas activas)
 
 - `players-argentina-2026.js` debe cargarse antes de `game.js`.
-- La base contiene 957 futbolistas únicos de 30 clubes de Primera División Argentina 2026. Las transferencias internas de la temporada se consolidan en una sola carta y conservan todos los clubes.
+- El pool activo contiene **200 futbolistas** y cubre los 30 clubes de Primera División Argentina 2026, con un mínimo de 5 cartas por club.
+- La selección prioriza AVG y, a igualdad, minutos 2026. Después de garantizar representación de todos los clubes, se completa con las cartas mejor valoradas.
 - Las estadísticas 2026 de temporada se mantienen separadas del AVG.
 - Los jugadores cruzados con el snapshot FC 27 usan sus atributos disponibles en la simulación. Los no cruzados usan un AVG interno derivado para balance y **nunca debe presentarse como rating oficial de EA**.
-- Mantener los IDs legacy y las 28 cartas históricas para no romper saves anteriores.
+- Los IDs de las 29 cartas históricas se conservan sólo como índice de compatibilidad para saves anteriores; no forman parte de sobres, mercado ni Álbum nuevo.
+- La escala de rareza/precio para esta liga es: 80+ Legendario, 77–79 Épico, 74–76 Destacado, ≤73 Base.
 - Cualquier regeneración del dataset debe conservar el prefijo `arg26-`, posiciones ARQ/DEF/MED/DEL y compatibilidad con Mercado, sobres, Álbum, Mejor XI y simulación.
 
 ## v0.6.1 — invariantes de UX
