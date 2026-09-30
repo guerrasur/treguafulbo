@@ -16,7 +16,7 @@
 *{box-sizing:border-box} body{margin:0;color:var(--ink-2);background:linear-gradient(#aadeff 0 170px,#f1dfac 170px 100%);min-height:100vh} button,input,select{font:inherit} button{cursor:pointer;color:inherit}.hidden{display:none!important}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;background-image:radial-gradient(#16384d 1px,transparent 1px);background-size:18px 18px;mix-blend-mode:multiply}
 .app-shell{min-height:100vh;position:relative;z-index:1;padding-bottom:82px}.topbar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(245,235,200,.94);border-bottom:3px solid var(--line);backdrop-filter:blur(10px)}
-.brand{border:0;background:transparent;text-align:left;position:relative;padding:0 0 0 4px}.brand-title{font-weight:1000;font-size:clamp(24px,4vw,40px);letter-spacing:-2px;display:block;line-height:.9;transform:rotate(-1deg)}.brand-subtitle{display:block;background:var(--yellow);font-size:10px;font-weight:900;letter-spacing:.8px;padding:2px 6px;width:max-content;margin-top:4px;transform:rotate(-1deg)}.brand-crown{position:absolute;left:48%;top:-7px;color:#f8c33a;text-shadow:1px 1px 0 var(--line);font-size:18px}.brand small{position:absolute;left:calc(100% + 8px);bottom:0;font-size:10px;white-space:nowrap}.topbar-actions{display:flex;gap:8px}.icon-button{width:42px;height:42px;border:2px solid var(--line);border-radius:11px;background:var(--paper-2);font-weight:1000;box-shadow:0 3px 0 rgba(13,44,64,.2)}
+.brand{border:0;background:transparent;text-align:left;position:relative;padding:0 0 0 4px}.brand-title{font-weight:1000;font-size:clamp(24px,4vw,40px);letter-spacing:-2px;display:block;line-height:.9;transform:rotate(-1deg)}.brand-subtitle{display:block;background:var(--yellow);font-size:10px;font-weight:900;letter-spacing:.8px;padding:2px 6px;width:max-content;margin-top:4px;transform:rotate(-1deg)}.brand-crown{position:absolute;left:48%;top:-7px;color:#f8c33a;text-shadow:1px 1px 0 var(--line);font-size:18px}.brand small{position:absolute;left:calc(100% + 8px);bottom:0;font-size:10px;white-space:nowrap}.topbar-actions{display:flex;gap:8px;align-items:center}.icon-button{width:42px;height:42px;border:2px solid var(--line);border-radius:11px;background:var(--paper-2);font-weight:1000;box-shadow:0 3px 0 rgba(13,44,64,.2)}.update-button{border:2px solid var(--line);border-radius:11px;background:var(--yellow);padding:0 12px;height:42px;font-weight:1000;box-shadow:0 3px 0 rgba(13,44,64,.2)}
 .screen{max-width:1400px;margin:0 auto;padding:16px}.welcome-screen{min-height:calc(100vh - 100px);display:grid;place-items:center}.hero-card{width:min(100%,980px);display:grid;grid-template-columns:1.15fr .85fr;border:3px solid var(--line);border-radius:22px;overflow:hidden;background:var(--paper-2);box-shadow:var(--shadow)}.hero-art{min-height:430px;background:linear-gradient(#78c8ff 0 55%,#78bb55 55% 100%);position:relative;overflow:hidden}.hill{position:absolute;background:#61a34e;border:3px solid var(--line);border-radius:50% 50% 0 0}.hill-a{width:80%;height:45%;left:-20%;bottom:-5%}.hill-b{width:85%;height:38%;right:-26%;bottom:-4%}.watchtower{position:absolute;right:18%;top:28%;font-size:88px;transform:rotate(2deg);filter:drop-shadow(3px 4px 0 rgba(13,44,64,.25))}.ball{position:absolute;left:20%;bottom:20%;font-size:72px;filter:drop-shadow(2px 4px 0 rgba(13,44,64,.2))}.flag{position:absolute;left:15%;top:24%;font-size:74px;color:var(--red);text-shadow:2px 2px 0 var(--line)}.hero-copy{padding:34px;display:flex;flex-direction:column;justify-content:center}.eyebrow,.panel-kicker,.status-kicker{font-size:11px;font-weight:1000;letter-spacing:1px}.hero-copy h1{font-size:clamp(34px,6vw,58px);line-height:.95;margin:12px 0}.hero-copy p{font-size:17px;line-height:1.45;margin:0 0 20px}.primary-button,.secondary-button,.end-turn-button{border:2px solid var(--line);border-radius:12px;padding:12px 16px;font-weight:1000;box-shadow:0 4px 0 rgba(13,44,64,.22)}.primary-button{background:var(--green);color:white}.secondary-button{background:var(--sky)}.large{width:100%;font-size:17px;margin-top:10px}
 .status-strip{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;background:var(--ink);color:white;padding:12px 14px;border:3px solid var(--line);border-radius:14px;margin-bottom:12px;box-shadow:var(--shadow)}.status-strip strong{display:block;font-size:20px}.action-pips{display:flex;gap:6px}.action-pips i{width:18px;height:18px;border:2px solid #fff;border-radius:50%;display:block;background:transparent}.action-pips i.on{background:var(--yellow)}.end-turn-button{background:var(--yellow);color:var(--ink-2);padding:10px 14px}
 .game-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px}.panel-card{background:var(--paper-2);border:3px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}.panel-card.compact{padding:12px}.panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}.panel-heading.mini{align-items:center}.panel-heading h2,.sub-header h2,.panel-card h3{margin:2px 0 0}.legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800}.legend-swatch{width:15px;height:15px;border:2px solid var(--line);border-radius:3px}
@@ -40,9 +40,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.2.0</small>
+        <small id="versionLabel">v0.2.1</small>
       </button>
       <div class="topbar-actions">
+        <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
         <button class="icon-button" id="helpButton" title="Cómo jugar">?</button>
         <button class="icon-button" id="newGameButton" title="Nueva partida">↻</button>
       </div>
@@ -58,7 +59,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.2.0</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.2.1</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Demo local. Un equipo controlado y rivales simulados.</p>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -184,7 +185,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 (() => {
   'use strict';
 
-  const VERSION = '0.2.0';
+  const VERSION = '0.2.1';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -555,10 +556,30 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 
   function updateContinue(){ $('#continueButton').classList.toggle('hidden',!load()); }
   async function checkLatestVersion(){
-    try{ const r=await fetch(`version.json?t=${Date.now()}`,{cache:'no-store'}); const data=await r.json(); if(data.version&&data.version!==VERSION){ const label=$('#versionLabel'); label.textContent=`v${VERSION} · nueva v${data.version}`; label.title='Nueva versión disponible.'; } }catch{}
+    try{
+      const r=await fetch(`version.json?t=${Date.now()}`,{cache:'no-store'});
+      const data=await r.json();
+      const button=$('#updateButton'),label=$('#versionLabel');
+      if(data.version&&data.version!==VERSION){
+        label.textContent=`v${VERSION} · nueva v${data.version}`;
+        label.title='Nueva versión disponible.';
+        button.classList.remove('hidden');
+        button.textContent=`Actualizar v${data.version}`;
+      }else{
+        button.classList.add('hidden');
+        label.textContent=`v${VERSION}`;
+        label.title='Versión actual';
+      }
+    }catch{}
+  }
+  function installUpdate(){
+    const url=new URL(window.location.href);
+    url.searchParams.set('update',Date.now().toString());
+    window.location.replace(url.toString());
   }
   function init(){
     $('#versionLabel').textContent=`v${VERSION}`; updateContinue(); checkLatestVersion();
+    $('#updateButton').addEventListener('click',installUpdate);
     $('#startSetupButton').addEventListener('click',()=>$('#setupDialog').showModal());
     $('#continueButton').addEventListener('click',()=>{state=load();if(state)showGame();});
     $('#newGameButton').addEventListener('click',()=>$('#setupDialog').showModal());
