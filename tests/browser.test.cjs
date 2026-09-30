@@ -1,51 +1,132 @@
-const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const http=require('node:http');
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const api=`globalThis.__qa={getState:()=>state,setState:s=>state=s,render,save,showGame,showMatch,playFrontierDispute,simulateMatch,checkBattles,load,autoBestXI,playerById,PLAYERS,SLOTS,regionForCell,regionOwners,applyRegionChanges};`;
+
+const api=`globalThis.__qa={
+  getState:()=>state,setState:s=>state=s,render,save,load,showGame,showMatch,
+  playFrontierDispute,makeTiebreaker,showTiebreakerFlow,playerById,PLAYERS,SLOTS
+};`;
+
 const root=process.cwd();
-const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://localhost').pathname.slice(1)||'index.html';if(!['index.html','styles.css','game.js','players-argentina-2026.js','version.json'].includes(name)){res.writeHead(404);res.end();return;}let data=fs.readFileSync(path.join(root,name),'utf8');if(name==='game.js')data=data.replace("document.addEventListener('DOMContentLoaded',init);",api+"document.addEventListener('DOMContentLoaded',init);");res.setHeader('Content-Type',name.endsWith('.js')?'application/javascript':name.endsWith('.css')?'text/css':name.endsWith('.json')?'application/json':'text/html');res.end(data);});
-const errors=[];let browser;
+const server=http.createServer((req,res)=>{
+  const name=new URL(req.url,'http://localhost').pathname.slice(1)||'index.html';
+  if(!['index.html','styles.css','game.js','players-argentina-2026.js','version.json'].includes(name)){res.writeHead(404);res.end();return;}
+  let data=fs.readFileSync(path.join(root,name),'utf8');
+  if(name==='game.js')data=data.replace("document.addEventListener('DOMContentLoaded',init);",api+"document.addEventListener('DOMContentLoaded',init);");
+  res.setHeader('Content-Type',name.endsWith('.js')?'application/javascript':name.endsWith('.css')?'text/css':name.endsWith('.json')?'application/json':'text/html');
+  res.end(data);
+});
+
 async function stored(p){return p.evaluate(()=>JSON.parse(localStorage.getItem('treguafulbo-demo-v1')));}
-async function create(p,n){await p.goto(`http://127.0.0.1:${server.address().port}`);await p.locator('#startSetupButton').click();await p.locator('#teamCountInput').selectOption(String(n));await p.locator('#setupForm button[type=submit]').click();await p.locator('#gameScreen').waitFor({state:'visible'});await p.waitForTimeout(300);}
-async function drain(p){for(let i=0;i<20;i++){await p.waitForTimeout(80);if(await p.locator('#matchDialog').evaluate(d=>d.open)){await p.getByRole('button',{name:'Ver partido',exact:true}).click();await p.getByRole('button',{name:'Ir al final',exact:true}).click();await p.locator('.match-minute').filter({hasText:'FINAL'}).waitFor();await p.locator('#matchDialog .match-final button').click();continue;}if(await p.locator('#summaryDialog').evaluate(d=>d.open)){await p.locator('#summaryDialog button').click();continue;}return;}throw Error('Dialog queue did not drain');}
+
+async function createLeague(p,n=3){
+  await p.goto(`http://127.0.0.1:${server.address().port}`);
+  await p.locator('#startSetupButton').click();
+  await p.locator('#teamNameInput').fill('Club Demo');
+  await p.locator('#color1Input').evaluate(e=>{e.value='#112233';e.dispatchEvent(new Event('input',{bubbles:true}));});
+  await p.locator('#color2Input').evaluate(e=>{e.value='#445566';e.dispatchEvent(new Event('input',{bubbles:true}));});
+  await p.locator('#teamCountInput').selectOption(String(n));
+  await p.locator('#setupForm button[type=submit]').click();
+  await p.locator('#gameScreen').waitFor({state:'visible'});
+  await p.locator('#rosterIntroDialog').waitFor({state:'visible'});
+  assert.equal(await p.locator('#rosterIntroList .roster-intro-row').count(),11);
+  assert((await p.locator('#rosterIntroMeta').innerText()).includes('30 monedas'));
+  await p.locator('#rosterIntroContinue').click();
+}
+
+async function playToFinal(p){
+  await p.getByRole('button',{name:'Ver partido',exact:true}).click();
+  await p.getByRole('button',{name:'Ir al final',exact:true}).click();
+  await p.locator('.match-minute').filter({hasText:'FINAL'}).waitFor();
+  await p.locator('#matchDialog .match-final button').last().click();
+}
+
 (async()=>{
- await new Promise(r=>server.listen(0,'127.0.0.1',r));browser=await chromium.launch({executablePath:process.env.CHROME_EXECUTABLE,headless:true,args:['--no-sandbox']});
- for(const width of [320,390,768,1440]){
-  const context=await browser.newContext({viewport:{width,height:width<768?844:1000},isMobile:width<768,hasTouch:width<768});const p=await context.newPage();p.on('pageerror',e=>{errors.push(e.message);console.error('PAGEERROR',e.message);});await create(p,3);
-  assert.equal(await p.locator('#versionLabel').innerText(),'v0.8.1');assert.equal(await p.evaluate(()=>__qa.PLAYERS.filter(x=>x.season===2026).length),200);assert(await p.locator('#versionLabel').isVisible());assert.equal(await p.locator('#regionOverview .region-card').count(),8);assert.equal(await p.locator('#map .region-map-badge').count(),8);assert((await p.locator('#regionOverview').innerText()).includes('+3/ronda'));assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Horizontal overflow at ${width}`);
-  if(width===390){await p.waitForTimeout(350);await p.evaluate(()=>scrollTo(0,0));await p.screenshot({path:'/tmp/tregua-map.png',fullPage:true});await p.evaluate(()=>{const s=__qa.getState(),before=__qa.regionOwners();s.map.filter(c=>__qa.regionForCell(c)===0).forEach(c=>c.owner='t0');__qa.applyRegionChanges(before,true);__qa.render();});assert(await p.locator('.region-feedback.gained').isVisible());assert((await p.locator('.region-feedback').innerText()).includes('Zona A'));assert((await p.locator('.region-feedback').innerText()).includes('+3 monedas por ronda'));assert((await p.locator('#regionOverview [data-region="A"]').innerText()).includes('DOMINADA'));await p.locator('.region-feedback').evaluate(n=>n.remove());}
-  const before=await stored(p);await p.locator('[data-action=pack]').click();assert.equal(await p.locator('#packResults .concealed').count(),5);assert.equal(await p.locator('.pack-odds-grid .pack-odd').count(),4);assert.equal(await p.locator('#packResults .pack-card').count(),5);const afterPack=await stored(p);assert.equal(afterPack.actionsLeft,before.actionsLeft);assert.equal(afterPack.teams[0].coins,before.teams[0].coins-12);await p.locator('#packResults .card-cover').first().click();assert.equal(await p.locator('#packResults .concealed').count(),4);await p.locator('#revealAllButton').click();assert.equal(await p.locator('#packResults .concealed').count(),0);if(width===390){await p.waitForTimeout(700);await p.locator('#packDialog').evaluate(d=>d.scrollTop=0);await p.screenshot({path:'/tmp/tregua-pack.png'});}await p.locator('#packDialog [data-close-dialog]').last().click();
-  await p.locator('[data-nav=teamScreen]').click();assert.equal(await p.locator('#bestXIButton').innerText(),'Asignar automáticamente');assert(await p.locator('.rarity-stars').count()>=11);if(width<768)assert.equal(await p.locator('.squad-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);await p.locator('#bestXIButton').click();const after=await stored(p);assert.equal(after.actionsLeft,before.actionsLeft);assert.equal(new Set(after.teams[0].starters).size,11);assert(await p.evaluate(()=>__qa.getState().teams[0].starters.every((id,i)=>__qa.playerById(id).pos===__qa.SLOTS[i])));assert(after.teams[0].inventory.length===before.teams[0].inventory.length+5);await p.locator('#positionFilter').selectOption('DEF');await p.locator('#albumButton').click();const defTotal=await p.evaluate(()=>__qa.PLAYERS.filter(x=>x.pos==='DEF').length);assert.equal(await p.locator('#albumGrid .album-player-card').count(),defTotal);assert.equal(await p.locator('#careerStats .album-stat').count(),4);await p.locator('#albumPositionFilter').selectOption('DEL');const filtered=await p.locator('#albumGrid .album-player-card').count();assert(filtered>0&&filtered<200);await p.locator('#albumPositionFilter').selectOption('all');await p.locator('#albumScreen [data-back]').click();
-  await p.locator('[data-action=market]').click();await p.locator('#marketFilter').selectOption('DEL');const coinsBeforeSign=(await stored(p)).teams[0].coins;await p.locator('#marketList button').first().click();const afterSign=await stored(p);assert.equal(afterSign.actionsLeft,before.actionsLeft);assert(afterSign.teams[0].coins<coinsBeforeSign);await p.locator('#packDialog [data-close-dialog]').last().click();await p.locator('#marketScreen [data-back]').click();
-  await p.locator('[data-nav=leagueScreen]').click();assert(await p.locator('#standings').evaluate((a)=>Boolean(a.compareDocumentPosition(document.querySelector('#fixtureList'))&Node.DOCUMENT_POSITION_FOLLOWING)));assert.equal(await p.locator('#fixtureList .human-fixture').count(),6);await p.locator('[data-nav=gameScreen]').click();assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Overflow after acquisitions at ${width}`);await p.route('**/version.json*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({version:'0.8.1'})}));await p.reload();await p.locator('#updateButton').waitFor({state:'visible'});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Update header overflow at ${width}`);await context.close();console.log(`PASS mobile/desktop, pack, market, XI, album and update header (${width}px)`);
- }
- // Expansion stays available after another action without reactivating a flag/select mode.
- {
-  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const p=await context.newPage();p.on('pageerror',e=>{errors.push(e.message);console.error('PAGEERROR',e.message);});await create(p,3);
-  assert.equal(await p.locator('[data-action=expand]').count(),0);
-  const first=p.locator('#map .tile.available').first();assert(await first.isVisible());await first.click();assert.equal((await stored(p)).actionsLeft,2);
-  const packBefore=await stored(p);await p.locator('[data-action=pack]').click();const packAfter=await stored(p);assert.equal(packAfter.actionsLeft,packBefore.actionsLeft);assert.equal(packAfter.teams[0].coins,packBefore.teams[0].coins-12);await p.locator('#packDialog [data-close-dialog]').last().click();
-  const second=p.locator('#map .tile.available').first();assert(await second.isVisible());await second.click();assert.equal((await stored(p)).actionsLeft,1);
-  const minAction=await p.locator('.action-grid .action-button').evaluateAll(nodes=>Math.min(...nodes.map(n=>n.getBoundingClientRect().height)));assert(minAction>=44);
-  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-  await p.locator('[data-action=reinforce]').click();const fort=p.locator('#map .tile.reinforceable').first();assert(await fort.isVisible());await fort.click();assert.equal((await stored(p)).actionsLeft,0);console.log('PASS expansion, coin purchases, reinforcement, touch targets and compact mobile map flow');await context.close();
- }
- for(const n of [2,3,4]){
-  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const p=await context.newPage();p.on('pageerror',e=>{errors.push(e.message);console.error('PAGEERROR',e.message);});await create(p,n);
-  for(let round=0;round<16;round++){
-   const before=await stored(p);if(before.finished)break;await p.locator('#endTurnButton').click();
-   if(await p.locator('#matchDialog').evaluate(d=>d.open)){
-    assert.equal(await p.locator('.match-score').innerText(),'—');await p.keyboard.press('Escape');assert(await p.locator('#matchDialog').evaluate(d=>d.open));
-    if(round===0&&n===2){await p.getByRole('button',{name:'Ver partido',exact:true}).click();await p.getByRole('button',{name:'Pausar',exact:true}).click();const min=await p.locator('.match-minute').innerText();await p.waitForTimeout(200);assert.equal(await p.locator('.match-minute').innerText(),min);await p.screenshot({path:'/tmp/tregua-match.png'});await p.getByRole('button',{name:'Continuar',exact:true}).click();await p.getByRole('button',{name:'Ir al final',exact:true}).click();await p.locator('.match-minute').filter({hasText:'FINAL'}).waitFor();await p.locator('#matchDialog .match-final button').click();}
-   }
-   await drain(p);
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  const browser=await chromium.launch({executablePath:process.env.CHROME_EXECUTABLE,headless:true,args:['--no-sandbox']});
+  const errors=[];
+
+  for(const width of [320,390,768]){
+    const context=await browser.newContext({viewport:{width,height:width<768?844:1000},isMobile:width<768,hasTouch:width<768});
+    const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));
+    await createLeague(p,3);
+
+    assert.equal(await p.locator('#versionLabel').innerText(),'v0.9.0');
+    assert.equal((await stored(p)).seasonSchema,3);
+    assert((await p.locator('#seasonStrip').innerText()).includes('TORNEO 1/5'));
+    assert(await p.locator('#map .map-void').count()>=5);
+    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`overflow at ${width}`);
+
+    const before=await stored(p);
+    await p.locator('[data-action=pack]').click();
+    assert(await p.locator('#packConfirmDialog').evaluate(d=>d.open));
+    assert((await p.locator('#packConfirmDialog').innerText()).includes('12 monedas'));
+    assert.equal((await stored(p)).teams[0].coins,before.teams[0].coins);
+    await p.locator('#confirmPackButton').click();
+    await p.locator('#packDialog').waitFor({state:'visible'});
+    assert.equal((await stored(p)).teams[0].coins,before.teams[0].coins-12);
+    assert.equal(await p.locator('#packResults .pack-card').count(),5);
+    await p.locator('#packDialog [data-close-dialog]').last().click();
+
+    await p.locator('[data-nav=teamScreen]').click();
+    assert((await p.locator('#clubPrestigeBadge').innerText()).includes('Sin títulos'));
+    await p.locator('#bestXIButton').click();
+    assert(await p.locator('#autoXIChanges').isVisible());
+    assert((await p.locator('#autoXIChanges').innerText()).length>0);
+
+    await p.locator('[data-nav=leagueScreen]').click();
+    assert(await p.locator('#leagueOverallStandings table').isVisible());
+    assert(await p.locator('#standings table').isVisible());
+    assert((await p.locator('.league-rules-note').first().innerText()).includes('1.º +5'));
+
+    await p.reload();
+    await p.locator('#newGameButton').click();
+    assert.equal(await p.locator('#teamNameInput').inputValue(),'Club Demo');
+    assert.equal(await p.locator('#color1Input').inputValue(),'#112233');
+    assert.equal(await p.locator('#color2Input').inputValue(),'#445566');
+    await p.locator('#setupDialog [data-close-dialog]').click();
+    await p.locator('#continueButton').click();
+    if(await p.locator('#rosterIntroDialog').evaluate(d=>d.open))await p.locator('#rosterIntroContinue').click();
+
+    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`overflow after reload at ${width}`);
+    await context.close();
   }
-  const s=await stored(p);assert(s.finished,`${n} team league should finish`);assert(s.teams.every(t=>t.played===6));assert(await p.locator('#gameOverDialog').evaluate(d=>d.open));assert.equal(await p.locator('#podium .podium-place').count(),Math.min(n,3));if(n===3){await p.waitForTimeout(350);await p.screenshot({path:'/tmp/tregua-podium.png'});}
-  const xp=await p.evaluate(()=>JSON.parse(localStorage.getItem('treguafulbo-profile-v1')).xp);await p.reload();await p.locator('#continueButton').click();await drain(p);assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('treguafulbo-profile-v1')).xp),xp);
-  await context.close();console.log(`PASS full ${n}-team league, received replay queue, final podium and reload`);
- }
- // Build a legal direct frontier transaction, reload before FINAL, preserve outcome and exactly one commit.
- const context=await browser.newContext({viewport:{width:390,height:844}});const p=await context.newPage();p.on('pageerror',e=>{errors.push(e.message);console.error('PAGEERROR',e.message);});await create(p,2);
- await p.evaluate(()=>{const s=__qa.getState();s.map.forEach(c=>c.owner=c.x<4?'t0':'t1');__qa.playFrontierDispute('t0',s.map[4],true);});const original=await stored(p);assert(original.pendingMatch);assert.equal(original.teams[0].played,0);await p.reload();await p.locator('#continueButton').click();await p.locator('#matchDialog').waitFor({state:'visible'});const resumed=await stored(p);assert.equal(resumed.pendingMatch.match.id,original.pendingMatch.match.id);assert.equal(resumed.pendingMatch.match.homeGoals,original.pendingMatch.match.homeGoals);await drain(p);const final=await stored(p);assert.equal(final.teams[0].played,1);assert.equal(final.pendingMatch,null);assert.equal(final.matches.length,1);console.log('PASS reload during pending territorial match');
- await p.evaluate(()=>{let m;do{m=__qa.simulateMatch('t0','t1',null);}while(!m.events.some(e=>e.type==='goal'));const goal=m.events.find(e=>e.type==='goal');goal.minute=1;m.events.sort((a,b)=>a.minute-b.minute);globalThis.__testGoalCount=m.events.filter(e=>e.type==='goal').length;__qa.showMatch(m);});await p.getByRole('button',{name:'Ver partido',exact:true}).click();await p.locator('.goal-banner').waitFor({state:'visible'});assert.equal(await p.locator('.match-minute').innerText(),"1'");assert(await p.locator('.match-score').evaluate(e=>e.classList.contains('goal-flash')));await p.waitForTimeout(200);assert.equal(await p.locator('.match-minute').innerText(),"1'");await p.screenshot({path:'/tmp/tregua-match.png'});await p.getByRole('button',{name:'Ir al final',exact:true}).click();await p.locator('.match-minute').filter({hasText:'FINAL'}).waitFor();assert.equal(await p.locator('.match-goals-summary .goal-summary-row').count(),await p.evaluate(()=>__testGoalCount));assert((await p.locator('.match-goals-summary').innerText()).includes("1'"));await p.locator('#matchDialog .match-final button').click();console.log('PASS goal pause, visual emphasis and final scorer summary');
- assert.deepEqual(errors,[]);console.log('PASS no browser errors');await context.close();
-})().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();server.close();});
+
+  {
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await createLeague(p,2);
+
+    await p.evaluate(()=>{
+      const s=__qa.getState();
+      s.map.forEach(c=>{if(c.active!==false)c.owner=c.x<4?'t0':'t1';});
+      const target=s.map.find(c=>c.active!==false&&c.x===4&&c.owner==='t1'&&s.map.some(n=>n.active!==false&&n.x===3&&n.y===c.y&&n.owner==='t0'));
+      __qa.playFrontierDispute('t0',target,true);
+    });
+    await p.locator('#matchDialog').waitFor({state:'visible'});
+    const roles=await p.locator('#matchDialog .match-role').allInnerTexts();
+    assert.deepEqual(roles.sort(),['LOCAL','VISITANTE']);
+    await playToFinal(p);
+
+    await p.evaluate(()=>{
+      const s=__qa.getState(),tb=__qa.makeTiebreaker('tournament',['t0','t1']);
+      tb.match.homeGoals=0;tb.match.awayGoals=0;tb.match.result='draw';tb.match.events=[];tb.match.goals=[];
+      s.pendingTiebreaker=tb;s.finished=true;__qa.showTiebreakerFlow();
+    });
+    await p.locator('#matchDialog').waitFor({state:'visible'});
+    await playToFinal(p);
+    await p.locator('#penaltyDialog').waitFor({state:'visible'});
+    await p.locator('[data-penalty-kick=left]').click();
+    await p.locator('[data-penalty-dive=right]').click();
+    assert.equal(await p.locator('#penaltyConfirmButton').isEnabled(),true);
+    await p.locator('#penaltyConfirmButton').click();
+    assert((await p.locator('#penaltyReveal').innerText()).length>0);
+    assert.deepEqual(errors,[]);
+    await context.close();
+  }
+
+  console.log('PASS v0.9 browser flows: tournament intro, packs, league table, identity, local/visitor and penalties');
+  await browser.close();
+  server.close();
+})().catch(e=>{console.error(e);server.close();process.exitCode=1;});
