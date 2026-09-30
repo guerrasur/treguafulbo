@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.6.0';
+  const VERSION = '0.6.1';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -465,7 +465,7 @@
     state.map.forEach(cell=>{
       const key=`${cell.x},${cell.y}`,b=el('button','tile'); b.type='button'; b.setAttribute('role','gridcell');b.setAttribute('aria-label',`Casilla ${cell.x+1}, ${cell.y+1}: ${cell.owner?state.teams.find(t=>t.id===cell.owner)?.name:'libre'}`); b.dataset.x=cell.x; b.dataset.y=cell.y;
       if(cell.owner){const t=state.teams.find(t=>t.id===cell.owner);b.style.background=pattern(t);b.title=t.name;}
-      if(!state.finished&&currentTeam().human&&activeAction==='expand'&&state.actionsLeft>0&&!cell.owner&&available.has(key))b.classList.add('available');
+      if(!state.finished&&currentTeam().human&&state.actionsLeft>0&&!cell.owner&&available.has(key))b.classList.add('available');
       const pressure=pressureMap.get(key);
       if(pressure&&!frontierActive){
         b.classList.add('front-pressure');b.dataset.front=`${pressure.ownAdj}/${CONFIG.battleThreshold}`;
@@ -476,7 +476,7 @@
         b.classList.add('match-trigger');
         const rival=state.teams.find(t=>t.id===triggers.get(key));b.title=`Ocupar esta casilla genera partido contra ${rival.name}`;
       }
-      if(disputes.has(key)&&!state.finished&&currentTeam().human&&activeAction==='expand'&&state.actionsLeft>0){
+      if(disputes.has(key)&&!state.finished&&currentTeam().human&&state.actionsLeft>0){
         const rival=state.teams.find(t=>t.id===disputes.get(key));
         b.classList.add('disputable');b.title=`Disputar sector contra ${rival.name} · AVG ${teamAvg(rival)}`;
       }
@@ -485,17 +485,17 @@
     });
     const hint=$('#mapHint');
     if(frontierActive){
-      if(disputes.size)hint.textContent=boardFull()?'Mapa completo: disputá una casilla rival marcada con ⚽.':'Sin expansión libre: disputá una casilla rival marcada con ⚽.';
-      else hint.textContent='No hay un cruce territorial disponible. Consultá el calendario y cerrá el turno para continuar.';
-    }else if(triggers.size)hint.textContent='⚽ Las casillas marcadas generan un partido al ocuparlas.';
-    else{const best=pressures[0];hint.textContent=best?`Frente más cercano: ${best.ownAdj}/${CONFIG.battleThreshold}. Acercate para generar un partido.`:'Seleccioná una casilla libre marcada.';}
+      if(disputes.size)hint.textContent=boardFull()?'Mapa completo · tocá una casilla rival ⚽.':'Sin expansión libre · tocá una casilla rival ⚽.';
+      else hint.textContent='Sin cruce territorial disponible · cerrá el turno para continuar.';
+    }else if(triggers.size)hint.textContent='Expandir activo · ⚽ una casilla marcada genera partido.';
+    else{const best=pressures[0];hint.textContent=best?`Expandir activo · frente ${best.ownAdj}/${CONFIG.battleThreshold}.`:'Expandir activo · tocá una casilla libre marcada.';}
   }
 
   function renderFeed(){ const f=$('#eventFeed'); f.innerHTML=''; state.events.slice(0,8).forEach(ev=>{const d=el('div',`event ${ev.type==='match'?'match':''}`);d.append(el('strong','',ev.title),el('span','',ev.text));f.appendChild(d);}); if(!state.events.length)f.textContent='Sin novedades todavía.'; }
   function renderButtons(){ const humanTurn=currentTeam().human&&!state.finished; $$('.action-button').forEach(b=>{ b.disabled=!humanTurn || (b.dataset.action==='pack'&&humanTeam().inventory.length>=PLAYERS.length) || (state.actionsLeft<=0 && b.dataset.action!=='squad'); b.classList.toggle('selected',b.dataset.action===activeAction); }); $('#endTurnButton').disabled=!humanTurn;$('#endTurnButton').textContent=state.finished?'Ver podio':'Terminar turno';$('#endTurnButton').disabled=state.finished?false:!humanTurn; }
 
   function handleTile(cell){
-    if(state.finished||!currentTeam().human||activeAction!=='expand'||state.actionsLeft<=0)return;
+    if(state.finished||!currentTeam().human||state.actionsLeft<=0)return;
     const human=humanTeam();
     if(!cell.owner){
       const allowed=availableExpansion(human).some(c=>c.x===cell.x&&c.y===cell.y);if(!allowed)return;
@@ -508,10 +508,10 @@
     }
   }
 
-  function openScreen(id){ $$('.screen').forEach(s=>s.classList.add('hidden')); $('#'+id).classList.remove('hidden'); $('#bottomNav').classList.toggle('hidden',id==='welcomeScreen'); $$('#bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id)); if(state)render(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function openScreen(id){ if(id==='gameScreen')activeAction='expand'; $('.screen').forEach(s=>s.classList.add('hidden')); $('#'+id).classList.remove('hidden'); $('#bottomNav').classList.toggle('hidden',id==='welcomeScreen'); $('#bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id)); if(state)render(); window.scrollTo({top:0,behavior:'auto'}); }
   function showGame(){ $('#welcomeScreen').classList.add('hidden'); $('#bottomNav').classList.remove('hidden'); openScreen('gameScreen'); render(); setTimeout(resumeTurnIntro,0); }
 
-  function openAction(action){ activeAction=action; if(action==='market')openScreen('marketScreen'); else if(action==='squad')openScreen('teamScreen'); else if(action==='pack')openPack(); else {openScreen('gameScreen');render();} }
+  function openAction(action){ activeAction='expand'; if(action==='market')openScreen('marketScreen'); else if(action==='squad')openScreen('teamScreen'); else if(action==='pack')openPack(); else {openScreen('gameScreen');render();} }
 
   function renderMarket(){
     if(!state)return;const list=$('#marketList');list.innerHTML='';const team=humanTeam(),filter=$('#marketFilter').value;
