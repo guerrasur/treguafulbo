@@ -1,4 +1,4 @@
-# CLAUDE.md — Trucebol
+# CLAUDE.md — Treguafulbo
 
 ## Producto
 
@@ -22,6 +22,21 @@ Tomar el concept art aprobado como norte: tablero táctico colorido, papel crema
 
 Usar texto mínimo, neutro, directo y funcional. Evitar jerga, chistes, tono canchero, frases grandilocuentes o intentos de complicidad.
 
+## Dirección de partidos
+
+- Los partidos son 100% simulados. NO agregar minijuegos, QTE, tiros manuales ni decisiones durante el encuentro.
+- La profundidad debe venir de los stats del jugador, la posición natural, el puesto ocupado y el armado del XI.
+- Mantener azar ponderado: un mejor equipo debe tener ventaja, no garantía absoluta.
+- Conservar informe de posesión, remates, tiros al arco, xG, atajadas, goles, asistencias, figura, minuto a minuto y rendimientos.
+- No reemplazar la base de Treguafulbo por la arquitectura del repo abandonado `guerrasur/trucebol`; portar mejoras de forma incremental.
+
+## v0.2.0
+
+- Base visual, mapa, navegación, plantel, mercado, IA y flujo de v0.1 conservados.
+- Atributos ATQ/PAS/DEF/ARQ y penalización por fuera de posición.
+- Simulación avanzada e informe ampliado.
+- Save actual `treguafulbo-demo-v1`, con migración no destructiva desde `trucebol-demo-v1`.
+
 ## v0.1.0
 
 - 2–4 equipos;
@@ -35,7 +50,7 @@ Usar texto mínimo, neutro, directo y funcional. Evitar jerga, chistes, tono can
 - frente con umbral de 3 adyacencias;
 - partido inmediato y turno continúa (provisorio);
 - empate divide la zona;
-- save `trucebol-demo-v1`.
+- save `treguafulbo-demo-v1`.
 
 ## Arquitectura
 
