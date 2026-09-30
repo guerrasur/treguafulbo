@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.8.2';
+  const VERSION = '0.8.3';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -801,7 +801,7 @@
   function checkBattles(provokerId,show,preferredDefenderId=null){
     const candidates=battleCandidates(provokerId).filter(c=>canPlayPair(provokerId,c.defenderId));
     const c=(preferredDefenderId?candidates.find(x=>x.defenderId===preferredDefenderId):null)||candidates[0];if(!c)return null;
-    const match=simulateMatch(provokerId,c.defenderId,c.cell);match.mode='pressure';beginMatch(match,'pressure',c.cell,show);return match;
+    const match=simulateMatch(provokerId,c.defenderId,c.cell);match.mode='pressure';match.attackerId=provokerId;match.defenderId=c.defenderId;beginMatch(match,'pressure',c.cell,show);return match;
   }
 
   function calculatePerformances(teams,events,score,stats){
@@ -878,7 +878,7 @@
   function playFrontierDispute(attackerId,cell,show){
     const defenderId=cell.owner,attacker=state.teams.find(t=>t.id===attackerId),defender=state.teams.find(t=>t.id===defenderId);
     if(!attacker||!defender||!canPlayPair(attackerId,defenderId))return null;
-    const match=simulateMatch(attacker.id,defender.id,cell);match.mode='direct';
+    const match=simulateMatch(attacker.id,defender.id,cell);match.mode='direct';match.attackerId=attacker.id;match.defenderId=defender.id;
     match.chronicle=match.result==='home'?`${attacker.name} gana y suma 1 casilla.`:match.result==='draw'?'Empate. El defensor conserva la casilla.':`${defender.name} gana y conserva la casilla.`;
     beginMatch(match,'direct',cell,show);return match;
   }
@@ -906,6 +906,11 @@
       grid.append(side);
     });wrap.append(grid);return wrap;
   }
+  function matchTerritoryRole(match,teamId){
+    if(match.mode!=='direct'&&match.mode!=='pressure')return '';
+    const attackerId=match.attackerId||match.homeId,defenderId=match.defenderId||match.awayId;
+    return teamId===attackerId?'VISITANTE':teamId===defenderId?'LOCAL':'';
+  }
   function showMatch(match,onFinal=null,onClose=null){
     const dialog=$('#matchDialog');if(dialog.open)return;
     const isReplay=state.matches.some(m=>m.id===match.id);
@@ -916,7 +921,7 @@
     tx.append(el('span','panel-kicker',onClose?'PARTIDO RECIBIDO':state.matches.some(m=>m.id===match.id)?'REPETICIÓN':'PREVIA DEL PARTIDO'),el('h2','',match.mode==='league'||!match.front?'Encuentro de liga':'Disputa territorial'));head.append(tx);c.append(head);
     const minute=el('div','match-minute','PREVIA'),goalBanner=el('div','goal-banner hidden','GOL');goalBanner.setAttribute('role','status');
     const board=el('div','match-scoreboard live-scoreboard'),homeBox=el('div','match-team'),awayBox=el('div','match-team'),score=el('div','match-score','—');
-    [[home,homeBox,match.avgHome],[away,awayBox,match.avgAway]].forEach(([team,box,av])=>{const cr=el('div','crest');setCrest(cr,team);box.append(cr,el('strong','',team.name),el('small','',`AVG ${av??teamAvg(team)}`));});board.append(homeBox,score,awayBox);c.append(minute,goalBanner,board);
+    [[home,homeBox,match.avgHome],[away,awayBox,match.avgAway]].forEach(([team,box,av])=>{const cr=el('div','crest');setCrest(cr,team);const role=matchTerritoryRole(match,team.id);box.append(cr,el('strong','',team.name));if(role)box.append(el('span',`match-role ${role.toLowerCase()}`,role));box.append(el('small','',`AVG ${av??teamAvg(team)}`));});board.append(homeBox,score,awayBox);c.append(minute,goalBanner,board);
     const preview=el('div','match-preview');
     preview.append(el('div','rules-note',(match.mode==='league'?'Partido del calendario. Suma puntos; no cambia territorio.':match.mode==='direct'?'Victoria: conquistás la casilla. Empate o derrota: el defensor la conserva.':'El resultado puede modificar hasta 3 casillas de la zona.')+(match.territoryDefenseBonus?` Defensa reforzada: +${match.territoryDefenseBonus} DEF local.`:'')));
     const profiles=match.profiles||[teamProfile(home),teamProfile(away)],compare=el('div','preview-profiles');
