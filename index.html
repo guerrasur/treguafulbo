@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#153b55" />
   <title>Treguafulbo</title>
   <meta name="description" content="Demo offline de Treguafulbo: fútbol y territorio." />
-  <link rel="stylesheet" href="styles.css?v=0.8.1" />
+  <link rel="stylesheet" href="styles.css?v=0.8.2" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.8.1</small>
+        <small id="versionLabel">v0.8.2</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,7 +35,7 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.8.1</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.8.2</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -215,6 +215,13 @@
     <div id="matchContent"></div>
   </dialog>
 
+  <dialog id="packConfirmDialog" class="game-dialog">
+    <div class="dialog-heading"><div><span class="panel-kicker">PAQUETE</span><h2>Confirmar compra</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
+    <div class="pack-info"><strong>Precio · <span id="packConfirmPrice">—</span></strong><small id="packConfirmCoins">—</small></div>
+    <p class="dialog-note">Incluye 5 jugadores. Abrir un paquete no consume movimientos.</p>
+    <div class="pack-actions"><button class="secondary-button" data-close-dialog>Cancelar</button><button id="confirmPackButton" class="primary-button">Comprar y abrir</button></div>
+  </dialog>
+
   <dialog id="packDialog" class="game-dialog pack-dialog">
     <div class="dialog-heading"><div><span class="panel-kicker">PAQUETE</span><h2 id="acquisitionTitle">Jugadores</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
     <div id="packIntro"></div><div id="packResults" class="pack-results"></div>
@@ -234,7 +241,7 @@
     <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
   </dialog>
 
-  <script src="players-argentina-2026.js?v=0.8.1" defer></script>
-  <script src="game.js?v=0.8.1" defer></script>
+  <script src="players-argentina-2026.js?v=0.8.2" defer></script>
+  <script src="game.js?v=0.8.2" defer></script>
 </body>
 </html>
