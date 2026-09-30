@@ -36,7 +36,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 @media(max-width:560px){.squad-header{flex-wrap:wrap}.auto-xi-button{margin-left:0;width:100%}.front-status-card{order:-1}.goal-banner{font-size:20px}.match-minute{font-size:19px}}
 
 
-/* v0.4.0 — frontera activa + lectura de plantel/AVG */
+/* v0.4.1 — frontera activa + lectura de plantel/AVG */
 .team-overview-card{gap:7px}.team-overview-list{display:grid;gap:5px}.team-overview-row,.rival-avg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #d4c99f;padding-top:6px;font-size:11px}.team-overview-row:first-child,.rival-avg-row:first-child{border-top:0;padding-top:1px}.team-overview-row.human,.rival-avg-row.human{font-weight:1000}.team-overview-name,.rival-avg-name{display:flex;align-items:center;min-width:0}.team-overview-row strong,.rival-avg-row strong{white-space:nowrap;font-size:13px}
 .tile.disputable{outline:4px solid var(--yellow);outline-offset:-5px;box-shadow:inset 0 0 0 7px rgba(234,85,70,.36);animation:disputePulse .65s infinite alternate}.tile.disputable:before{content:"⚽";font-size:clamp(17px,3.5vw,29px)}@keyframes disputePulse{to{filter:brightness(1.14);transform:scale(.985)}}
 .squad-hero{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;margin-bottom:12px;background:linear-gradient(135deg,#fff7db,#eaf6ff)}.squad-hero-copy h3{font-size:24px;margin:2px 0 7px}.squad-overall{display:inline-flex;align-items:baseline;gap:8px;background:var(--yellow);border:2px solid var(--line);border-radius:10px;padding:6px 10px}.squad-overall span{font-size:9px;font-weight:1000;letter-spacing:.9px}.squad-overall strong{font-size:30px;line-height:1}.squad-season{display:grid;grid-template-columns:repeat(3,minmax(52px,1fr));gap:7px}.squad-season>div{min-width:52px;text-align:center;border:2px solid var(--line);border-radius:10px;background:white;padding:8px}.squad-season span{display:block;font-size:8px;font-weight:1000;letter-spacing:1px}.squad-season b{display:block;font-size:20px;margin-top:2px}
@@ -55,7 +55,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.4.0</small>
+        <small id="versionLabel">v0.4.1</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -74,7 +74,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.4.0</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.4.1</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Demo local. Un equipo controlado y rivales simulados.</p>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -236,7 +236,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 (() => {
   'use strict';
 
-  const VERSION = '0.4.0';
+  const VERSION = '0.4.1';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -756,35 +756,60 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   }
 
   function aiTurn(team){
-    const events=[]; state.actionsLeft=CONFIG.actionsPerTurn;
+    const matches=[]; state.actionsLeft=CONFIG.actionsPerTurn;
     for(let a=0;a<CONFIG.actionsPerTurn;a++){
       const options=availableExpansion(team);
       if(options.length){
         const target=chooseAiExpansion(team,options);target.owner=team.id;state.actionsLeft--;
-        events.push(`${team.name}: sector ${target.x+1}-${target.y+1}.`);
-        const m=checkBattles(team.id,false);if(m)events.push(`Partido: ${m.homeName} ${m.homeGoals}-${m.awayGoals} ${m.awayName}.`);
+        const m=checkBattles(team.id,false);if(m)matches.push(`${m.homeName} ${m.homeGoals}-${m.awayGoals} ${m.awayName}`);
         continue;
       }
       const disputes=disputableFrontier(team);
       if(disputes.length){
         const target=chooseAiDispute(team,disputes);state.actionsLeft--;
         const m=playFrontierDispute(team.id,target,false);
-        if(m)events.push(`Partido: ${m.homeName} ${m.homeGoals}-${m.awayGoals} ${m.awayName}. ${m.chronicle}`);
+        if(m)matches.push(`${m.homeName} ${m.homeGoals}-${m.awayGoals} ${m.awayName}`);
         continue;
       }
       break;
     }
-    return events;
+    return matches;
   }
   function chooseAiExpansion(team,options){ const enemies=state.map.filter(c=>c.owner&&c.owner!==team.id); if(!enemies.length)return rng(options); return options.sort((a,b)=>nearestEnemy(a,enemies)-nearestEnemy(b,enemies))[0]; }
   function chooseAiDispute(team,options){ return [...options].sort((a,b)=>teamAvg(state.teams.find(t=>t.id===a.owner))-teamAvg(state.teams.find(t=>t.id===b.owner))||neighbors(b).filter(n=>n.owner===team.id).length-neighbors(a).filter(n=>n.owner===team.id).length)[0]; }
   function nearestEnemy(c,enemies){return Math.min(...enemies.map(e=>Math.abs(c.x-e.x)+Math.abs(c.y-e.y)));}
 
   function endTurn(){
-    if(!currentTeam().human)return; pendingSummary=[];
-    for(let i=1;i<state.teams.length;i++){ state.turnIndex=i; pendingSummary.push(...aiTurn(state.teams[i])); }
+    if(!currentTeam().human)return;
+    pendingSummary=[];
+    const ownersBefore=state.map.map(c=>c.owner);
+    const matchSummaries=[];
+    for(let i=1;i<state.teams.length;i++){
+      state.turnIndex=i;
+      matchSummaries.push(...aiTurn(state.teams[i]));
+    }
+
+    const territory=new Map(state.teams.map(t=>[t.id,{gained:0,lost:0}]));
+    state.map.forEach((cell,index)=>{
+      const before=ownersBefore[index],after=cell.owner;
+      if(before===after)return;
+      if(after&&territory.has(after))territory.get(after).gained++;
+      if(before&&territory.has(before))territory.get(before).lost++;
+    });
+
+    state.teams.forEach(team=>{
+      const change=territory.get(team.id);
+      if(!change)return;
+      const parts=[];
+      if(change.gained)parts.push(`Expandió ${change.gained} ${change.gained===1?'casilla':'casillas'}`);
+      if(change.lost)parts.push(`Perdió ${change.lost} ${change.lost===1?'casilla':'casillas'}`);
+      if(parts.length)pendingSummary.push(`${team.name}: ${parts.join(' · ')}.`);
+    });
+    matchSummaries.forEach(result=>pendingSummary.push(`Partido: ${result}.`));
+    if(!pendingSummary.length)pendingSummary.push('Sin cambios territoriales ni partidos.');
+
     state.round++; state.turnIndex=0; state.actionsLeft=CONFIG.actionsPerTurn; activeAction='expand'; addEvent('Ronda',`${state.round}.`); save(); render();
-    if(pendingSummary.length){ const box=$('#turnSummary');box.innerHTML='';pendingSummary.forEach(s=>box.appendChild(el('div','summary-item',s)));$('#summaryDialog').showModal(); }
+    const box=$('#turnSummary');box.innerHTML='';pendingSummary.forEach(s=>box.appendChild(el('div','summary-item',s)));$('#summaryDialog').showModal();
   }
 
   function renderStandings(){ if(!state)return; const sorted=[...state.teams].sort((a,b)=>b.points-a.points||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf); const wrap=$('#standings');wrap.innerHTML='';const t=el('table','standings-table');const h=el('tr');['#','Equipo','AVG','PJ','DG','PTS'].forEach(x=>h.appendChild(el('th','',x)));t.appendChild(h);sorted.forEach((tm,i)=>{const r=el('tr');const teamCell=el('td');const dot=el('i','team-dot');dot.style.background=pattern(tm);teamCell.append(dot,document.createTextNode(tm.name)); [i+1,teamCell,teamAvg(tm),tm.played,tm.gf-tm.ga,tm.points].forEach((v,j)=>{ if(j===1)r.appendChild(v); else r.appendChild(el('td','',String(v)));});t.appendChild(r);});wrap.appendChild(t);
