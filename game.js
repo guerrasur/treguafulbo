@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.6.3';
+  const VERSION = '0.6.4';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -317,7 +317,7 @@
     const teams=[makeTeam('t0',name,colors,true)];
     for(let i=1;i<count;i++){ const p=AI_PRESETS[i-1]; teams.push(makeTeam(`t${i}`,p.name,p.colors,false)); }
     activeAction='expand';matchPlaybackToken++;
-    state={id:`season-${Date.now()}-${Math.random()}`,fixtures:makeFixtures(teams),pendingMatch:null,seasonSchema:2,version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map:initialMap(count),events:[],matches:[],pendingHumanMatchIds:[],pendingTurnSummary:[],finished:false,winnerId:null,finishReason:null,startedAt:Date.now()};
+    state={id:`season-${Date.now()}-${Math.random()}`,fixtures:makeFixtures(teams),pendingMatch:null,seasonSchema:2,version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map:initialMap(count),events:[],matches:[],pendingHumanMatchIds:[],pendingTurnSummary:[],scouting:null,finished:false,winnerId:null,finishReason:null,startedAt:Date.now()};
     discoverPlayers(teams[0].inventory);
     addEvent('Partida creada',`${CONFIG.startingTiles} sectores iniciales. Liga de 6 partidos por equipo.`);
     save(); showGame();
@@ -547,15 +547,35 @@
 
   function openAction(action){ activeAction='expand'; if(action==='market')openScreen('marketScreen'); else if(action==='squad')openScreen('teamScreen'); else if(action==='pack')openPack(); else {openScreen('gameScreen');render();} }
 
+  function scoutingCapacity(territory){
+    if(territory>=15)return 6;
+    if(territory>=10)return 5;
+    if(territory>=6)return 4;
+    return 3;
+  }
+  function ensureScouting(team=humanTeam()){
+    const current=state.scouting;
+    const valid=current&&current.round===state.round&&current.teamId===team.id&&Array.isArray(current.playerIds)&&current.playerIds.every(id=>!!playerById(id));
+    if(valid)return current;
+    const territory=ownedTiles(team.id).length,capacity=scoutingCapacity(territory);
+    const available=PLAYERS.filter(p=>!team.inventory.includes(p.id));
+    const seed=`${state.id}|${state.round}|${team.id}`;
+    const ordered=[...available].sort((a,b)=>hashStat(`${seed}|${a.id}`)-hashStat(`${seed}|${b.id}`)||a.id.localeCompare(b.id));
+    state.scouting={round:state.round,teamId:team.id,territory,capacity:Math.min(capacity,available.length),playerIds:ordered.slice(0,capacity).map(p=>p.id)};
+    save();return state.scouting;
+  }
   function renderMarket(){
-    if(!state)return;const list=$('#marketList');list.innerHTML='';const team=humanTeam(),filter=$('#marketFilter').value;
-    const pool=PLAYERS.filter(p=>!team.inventory.includes(p.id)&&(filter==='all'||p.pos===filter)).sort((a,b)=>b.rating-a.rating);
+    if(!state)return;const list=$('#marketList');list.innerHTML='';const team=humanTeam(),filter=$('#marketFilter').value,scouting=ensureScouting(team);
+    const availableIds=scouting.playerIds.filter(id=>!team.inventory.includes(id));
+    const info=$('#scoutingInfo');if(info)info.textContent=`Cobertura: ${scouting.territory} sectores · ${scouting.playerIds.length} observados · ${availableIds.length} disponibles. La cobertura se actualiza al empezar cada ronda.`;
+    const pool=availableIds.map(playerById).filter(p=>p&&(filter==='all'||p.pos===filter)).sort((a,b)=>b.rating-a.rating);
     pool.forEach(p=>{const row=playerCard(p,'market-card');const comparison=lineupComparison(p);row.append(el('small','comparison',comparison));
       const bt=el('button','primary-button','Fichar · 1 acción');bt.disabled=state.finished||state.actionsLeft<=0||!currentTeam().human;bt.addEventListener('click',()=>signPlayer(p.id));row.append(bt);list.append(row);
-    });if(!pool.length)list.append(el('div','notice-card','No hay jugadores disponibles con este filtro.'));
+    });
+    if(!pool.length)list.append(el('div','notice-card',availableIds.length?'No hay jugadores observados en esta posición esta ronda.':'No quedan jugadores observados disponibles esta ronda.'));
   }
   function signPlayer(id){
-    const team=humanTeam(),p=playerById(id);if(!p||state.finished||state.actionsLeft<=0||!currentTeam().human||team.inventory.includes(id))return;
+    const team=humanTeam(),p=playerById(id),scouting=ensureScouting(team);if(!p||state.finished||state.actionsLeft<=0||!currentTeam().human||team.inventory.includes(id)||!scouting.playerIds.includes(id))return;
     team.inventory.push(id);state.actionsLeft--;discoverPlayers([id]);addEvent('Fichaje',`${p.name} · ${p.rating}.`);save();render();showAcquisition([p],'Fichaje confirmado',false);
   }
   function packWeight(p){return p.rating>=90?1:p.rating>=87?3:p.rating>=83?7:12;}
@@ -941,7 +961,7 @@
     if(!pendingSummary.length)pendingSummary.push('Sin cambios territoriales ni partidos.');
 
     evaluateGameEnd();
-    if(!state.finished){state.round++;addEvent('Ronda',String(state.round)+'.');}
+    if(!state.finished){state.round++;state.scouting=null;addEvent('Ronda',String(state.round)+'.');}
     state.turnIndex=0; state.actionsLeft=CONFIG.actionsPerTurn; activeAction='expand';
     state.pendingTurnSummary=[...pendingSummary];
     save();resumeTurnIntro();
