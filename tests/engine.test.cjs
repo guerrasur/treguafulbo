@@ -1,7 +1,7 @@
 const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
 function engine(){
  const storage=new Map();const ctx={console,Math:Object.create(Math),Date,JSON,Number,Array,Object,Map,Set,String,Boolean,setTimeout,clearTimeout,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{addEventListener(){},querySelector(){return null;}}};
- const source=fs.readFileSync('game.js','utf8').replace("document.addEventListener('DOMContentLoaded',init);",`globalThis.game={makeTeam,makeFixtures,initialMap,simulateMatch,resolveMatch,commitMatchStats,evaluateGameEnd,completeCalendarRound,canPlayPair,migrateSeason,weightedPack,teamAvg,teamProfile,autoBestXI,rankTeamsFor,load,save,awardSeason,awardMatch,playerById,PLAYERS,SLOTS,CONFIG,availableExpansion,battleCandidates,ownedTiles,hashStat,setState:s=>state=s,getState:()=>state,getProfile:()=>profile,setRandom:fn=>Math.random=fn};`);
+ const source=fs.readFileSync('game.js','utf8').replace("document.addEventListener('DOMContentLoaded',init);",`globalThis.game={makeTeam,makeFixtures,initialMap,simulateMatch,resolveMatch,commitMatchStats,evaluateGameEnd,completeCalendarRound,canPlayPair,migrateSeason,weightedPack,teamAvg,teamProfile,autoBestXI,rankTeamsFor,load,save,awardSeason,awardMatch,playerById,PLAYERS,SLOTS,CONFIG,availableExpansion,battleCandidates,ownedTiles,hashStat,scoutingCapacity,ensureScouting,setState:s=>state=s,getState:()=>state,getProfile:()=>profile,setRandom:fn=>Math.random=fn};`);
  vm.runInNewContext(source,ctx);return ctx.game;
 }
 function season(g,n){const teams=Array.from({length:n},(_,i)=>g.makeTeam(`t${i}`,`Equipo ${i}`,['#2f9d5b','#fff8df'],i===0));const s={id:`test-${Math.random()}`,seasonSchema:2,teams,fixtures:g.makeFixtures(teams),map:g.initialMap(n),matches:[],events:[],pendingHumanMatchIds:[],pendingTurnSummary:[],round:1,turnIndex:0,actionsLeft:3,finished:false};g.setState(s);return s;}
@@ -26,3 +26,17 @@ test('Recarga conserva el partido sin resolver y los partidos recibidos',()=>{co
 test('Paquetes sin duplicados, sin inventario vacío cuando queda 1, colección completa',()=>{const g=engine(),s=season(g,2);for(let i=0;i<6;i++){const picks=g.weightedPack(s.teams[0],5);assert.equal(new Set(picks.map(p=>p.id)).size,picks.length);picks.forEach(p=>{assert(!s.teams[0].inventory.includes(p.id));s.teams[0].inventory.push(p.id);});}assert.equal(s.teams[0].inventory.length,g.PLAYERS.length);assert.equal(g.weightedPack(s.teams[0]).length,0);});
 test('Desempate con enfrentamiento directo y posiciones compartidas',()=>{const g=engine(),s=season(g,3);s.teams.forEach(t=>{t.points=4;t.gf=3;t.ga=3;});s.matches=[{homeId:'t0',awayId:'t1',homeGoals:1,awayGoals:0,countsForLeague:true}];const ranked=g.rankTeamsFor(s);assert.equal(ranked[0].id,'t0');assert.equal(ranked[0].rank,1);s.matches=[];assert(g.rankTeamsFor(s).every(t=>t.rank===1));});
 test('Los eventos reproducen exactamente goles, remates, xG y tiros al arco (500 partidos)',()=>{const g=engine(),s=season(g,2);for(let i=0;i<500;i++){const m=g.simulateMatch('t0','t1',null);assert.equal(m.homeGoals,m.events.filter(e=>e.type==='goal'&&e.teamId==='t0').length);assert.equal(m.awayGoals,m.events.filter(e=>e.type==='goal'&&e.teamId==='t1').length);for(let side=0;side<2;side++){const events=m.events.filter(e=>e.teamId===`t${side}`);assert.equal(m.stats[side].shots,events.length);assert.equal(m.stats[side].onTarget,events.filter(e=>e.type==='save'||e.type==='goal').length);assert(Math.abs(m.stats[side].xg-events.reduce((a,e)=>a+e.xg,0))<1e-10);}assert.equal(m.playerRatings.length,22);assert.equal(m.stats[0].possession+m.stats[1].possession,100);assert(m.events.every((e,i,es)=>e.minute>=1&&e.minute<=90&&(!i||e.minute>=es[i-1].minute)));}});
+
+test('Scouting queda fijo durante la ronda y el territorio amplía la cobertura siguiente',()=>{
+ const g=engine(),s=season(g,2),team=s.teams[0];
+ const first=g.ensureScouting(team);
+ assert.equal(first.territory,3);assert.equal(first.playerIds.length,3);assert.equal(g.scoutingCapacity(3),3);
+ const firstIds=[...first.playerIds];
+ s.map.filter(c=>!c.owner).slice(0,7).forEach(c=>c.owner=team.id);
+ const sameRound=g.ensureScouting(team);
+ assert.deepEqual(sameRound.playerIds,firstIds);assert.equal(sameRound.territory,3);
+ s.round++;s.scouting=null;
+ const next=g.ensureScouting(team);
+ assert.equal(next.territory,10);assert.equal(next.playerIds.length,5);
+ assert.equal(g.scoutingCapacity(6),4);assert.equal(g.scoutingCapacity(10),5);assert.equal(g.scoutingCapacity(15),6);assert.equal(g.scoutingCapacity(40),6);
+});
