@@ -1115,7 +1115,7 @@
     $('#helpButton').addEventListener('click',()=>$('#helpDialog').showModal());
     $('#brandButton').addEventListener('click',()=>state?openScreen('gameScreen'):openScreen('welcomeScreen'));
     $('#endTurnButton').addEventListener('click',endTurn); $('#clearFeedButton').addEventListener('click',()=>{state.events=[];save();render();});
-    $('.action-button').forEach(b=>b.addEventListener('click',()=>openAction(b.dataset.action)));
+    Array.from(document.querySelectorAll('.action-button')).forEach(b=>b.addEventListener('click',()=>openAction(b.dataset.action)));
     $('#confirmPackButton').addEventListener('click',()=>{const dialog=$('#packConfirmDialog');if(dialog.open)dialog.close();openPack();});
     $$('[data-nav]').forEach(b=>b.addEventListener('click',()=>openScreen(b.dataset.nav)));
     $$('[data-back]').forEach(b=>b.addEventListener('click',()=>openScreen('gameScreen')));
