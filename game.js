@@ -1,11 +1,12 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.7.1';
+  const VERSION = '0.7.2';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
   const CONFIG = { gridSize: 8, actionsPerTurn: 3, startingTiles: 3, battleThreshold: 3, battleTransfer: 3, matchesPerTeam: 6, startingCoins: 30, minIncome: 3, regionBonus: 3, conquestReward: 5, packCost: 12, reinforcementBonus: 4 };
+  const REGION_NAMES = ['A','B','C','D','E','F','G','H'];
   const MATCH_MINUTE_MS = 100;
   const GOAL_PAUSE_MS = 1000;
 
@@ -294,7 +295,16 @@
   function ownedTiles(teamId){ return state.map.filter(c=>c.owner===teamId); }
   function claimCell(cell,owner){if(!cell)return false;const changed=cell.owner!==owner;cell.owner=owner;if(changed)cell.reinforced=false;return changed;}
   function regionForCell(cell){return Math.floor(cell.y/2)*2+Math.floor(cell.x/4);}
-  function controlledRegions(teamId){const out=[];for(let id=0;id<8;id++){const cells=state.map.filter(c=>regionForCell(c)===id);if(cells.length===8&&cells.every(c=>c.owner===teamId))out.push(id);}return out;}
+  function regionName(id){return `Zona ${REGION_NAMES[id]||id+1}`;}
+  function regionCells(id){return state.map.filter(c=>regionForCell(c)===id);}
+  function regionOwner(id){const cells=regionCells(id),owner=cells[0]?.owner||null;return owner&&cells.length===8&&cells.every(c=>c.owner===owner)?owner:null;}
+  function regionOwners(){return REGION_NAMES.map((_,id)=>regionOwner(id));}
+  function regionProgress(teamId,id){return regionCells(id).filter(c=>c.owner===teamId).length;}
+  function controlledRegions(teamId){return REGION_NAMES.map((_,id)=>id).filter(id=>regionOwner(id)===teamId);}
+  function regionChanges(before,after=regionOwners()){return after.flatMap((owner,id)=>owner===before[id]?[]:[{id,name:regionName(id),before:before[id]||null,after:owner||null,reward:CONFIG.regionBonus}]);}
+  function recordRegionChanges(changes){changes.forEach(change=>{if(change.before){const oldTeam=state.teams.find(t=>t.id===change.before);if(oldTeam)addEvent('Zona perdida',`${oldTeam.name} perdió ${change.name} · -${change.reward} monedas/ronda.`);}if(change.after){const newTeam=state.teams.find(t=>t.id===change.after);if(newTeam)addEvent('Zona dominada',`${newTeam.name} domina ${change.name} · +${change.reward} monedas/ronda.`);}});return changes;}
+  function showRegionFeedback(change,humanId=humanTeam().id){const gained=change.after===humanId,lost=change.before===humanId&&change.after!==humanId;if(!gained&&!lost)return;document.querySelector('.region-feedback')?.remove();clearTimeout(showRegionFeedback.timer);const box=el('div',`region-feedback ${gained?'gained':'lost'}`);box.setAttribute('role','status');box.setAttribute('aria-live','assertive');box.append(el('span','panel-kicker',gained?'ZONA DOMINADA':'ZONA PERDIDA'),el('strong','',change.name),el('small','',gained?`+${change.reward} monedas por ronda mientras la controles`:`Dejás de recibir +${change.reward} monedas por ronda`));document.body.append(box);if(gained)sound('rare');showRegionFeedback.timer=setTimeout(()=>box.remove(),2600);}
+  function applyRegionChanges(before,showHuman=false){const changes=recordRegionChanges(regionChanges(before));if(showHuman)changes.forEach(change=>showRegionFeedback(change));return changes;}
   function roundIncome(team){const territory=ownedTiles(team.id).length,base=Math.max(CONFIG.minIncome,Math.floor(territory/2)),regions=controlledRegions(team.id).length,regionBonus=regions*CONFIG.regionBonus;return {territory,base,regions,regionBonus,total:base+regionBonus};}
   function grantRoundIncome(){return state.teams.map(team=>{const income=roundIncome(team);team.coins=(Number(team.coins)||0)+income.total;return {teamId:team.id,...income};});}
   function rollRoundDie(){const roll=1+Math.floor(Math.random()*6),bonus=[0,0,1,1,2,3,5][roll];state.teams.forEach(t=>t.coins=(Number(t.coins)||0)+bonus);state.roundDie={round:state.round,roll,bonus};addEvent('Dado de ronda',bonus?`${roll} · +${bonus} monedas para cada equipo.`:`${roll} · sin bonus.`);return state.roundDie;}
@@ -488,7 +498,7 @@
     $('#regionCount').textContent=`${controlledRegions(humanTeam().id).length}/8`;
     setCrest($('#currentCrest'),humanTeam());
     renderSeason();renderAlbum();
-    renderActionPips(); renderLegend(); renderMap(); renderFrontStatus(); renderTeamOverview(); renderFeed(); renderButtons(); renderSquad(); renderStandings(); renderMarket();
+    renderActionPips(); renderLegend(); renderMap(); renderRegions(); renderFrontStatus(); renderTeamOverview(); renderFeed(); renderButtons(); renderSquad(); renderStandings(); renderMarket();
     $('#teamScreenTitle').textContent=humanTeam().name;
   }
 
@@ -509,11 +519,13 @@
   function renderMap(){
     const map=$('#map'); map.innerHTML='';
     const human=humanTeam(),reinforceMode=activeAction==='reinforce',frontierActive=frontierPhase(human),available=new Set(availableExpansion(human).map(c=>`${c.x},${c.y}`)),reinforceable=new Set(reinforceableCells(human).map(c=>`${c.x},${c.y}`)),fronts=frontCells(),pressures=frontPressures(human.id),pressureMap=new Map(pressures.map(x=>[`${x.cell.x},${x.cell.y}`,x])),triggers=matchTriggerCells(human.id);
-    const disputes=new Map(disputableFrontier(human).map(c=>[`${c.x},${c.y}`,c.owner]));
+    const disputes=new Map(disputableFrontier(human).map(c=>[`${c.x},${c.y}`,c.owner])),regionOwnerMap=regionOwners();
     state.map.forEach(cell=>{
       const key=`${cell.x},${cell.y}`,b=el('button','tile'); b.type='button'; b.setAttribute('role','gridcell');b.setAttribute('aria-label',`Casilla ${cell.x+1}, ${cell.y+1}: ${cell.owner?state.teams.find(t=>t.id===cell.owner)?.name:'libre'}`); b.dataset.x=cell.x; b.dataset.y=cell.y;
       if(cell.owner){const t=state.teams.find(t=>t.id===cell.owner);b.style.background=pattern(t);b.title=t.name;}
-      if(cell.x%4===3&&cell.x<CONFIG.gridSize-1)b.classList.add('region-edge-x');if(cell.y%2===1&&cell.y<CONFIG.gridSize-1)b.classList.add('region-edge-y');
+      const regionId=regionForCell(cell),regionMaster=regionOwnerMap[regionId];if(cell.x%4===3&&cell.x<CONFIG.gridSize-1)b.classList.add('region-edge-x');if(cell.y%2===1&&cell.y<CONFIG.gridSize-1)b.classList.add('region-edge-y');
+      if(regionMaster)b.classList.add(regionMaster===human.id?'region-controlled-human':'region-controlled-rival');
+      if(cell.x%4===0&&cell.y%2===0){const rb=el('span',`region-map-badge${regionMaster?' controlled':''}`);rb.append(el('b','',REGION_NAMES[regionId]),el('small','',`+${CONFIG.regionBonus}`));b.append(rb);}
       if(cell.reinforced){b.classList.add('reinforced');b.append(el('span','fort-badge','◆'));}
       if(!state.finished&&currentTeam().human&&state.actionsLeft>0&&!reinforceMode&&!cell.owner&&available.has(key))b.classList.add('available');
       if(reinforceMode&&reinforceable.has(key))b.classList.add('reinforceable');
@@ -547,6 +559,15 @@
     }
   }
 
+  function renderRegions(){
+    const wrap=$('#regionOverview');if(!wrap)return;wrap.innerHTML='';const human=humanTeam(),owners=regionOwners();
+    REGION_NAMES.forEach((letter,id)=>{const ownerId=owners[id],mine=regionProgress(human.id,id),card=el('div',`region-card${ownerId===human.id?' owned':ownerId?' rival':''}`);card.dataset.region=letter;
+      const head=el('div','region-card-head');head.append(el('strong','',`Zona ${letter}`),el('span','region-reward',`+${CONFIG.regionBonus}/ronda`));card.append(head);
+      const meter=el('div','region-progress'),fill=el('i');fill.style.width=`${mine/8*100}%`;meter.append(fill);card.append(meter);
+      const status=ownerId===human.id?'DOMINADA':ownerId?`Dominada por ${state.teams.find(t=>t.id===ownerId)?.name||'rival'}`:`${mine}/8 tuyas`;card.append(el('small','region-status',status));wrap.append(card);
+    });
+  }
+
   function renderFeed(){ const f=$('#eventFeed'); f.innerHTML=''; state.events.slice(0,8).forEach(ev=>{const d=el('div',`event ${ev.type==='match'?'match':''}`);d.append(el('strong','',ev.title),el('span','',ev.text));f.appendChild(d);}); if(!state.events.length)f.textContent='Sin novedades todavía.'; }
   function renderButtons(){
     const human=humanTeam(),humanTurn=currentTeam().human&&!state.finished;
@@ -568,8 +589,8 @@
     if(activeAction==='reinforce'){reinforceTile(human,cell,true);return;}
     if(!cell.owner){
       const allowed=availableExpansion(human).some(c=>c.x===cell.x&&c.y===cell.y);if(!allowed)return;
-      const plannedOpponent=matchTriggerCells(human.id).get(`${cell.x},${cell.y}`)||null;
-      claimCell(cell,human.id);state.actionsLeft--;addEvent('Territorio ganado','Se ganó 1 casilla.');sound('tap');toast('Territorio +1 · 1 movimiento usado');
+      const plannedOpponent=matchTriggerCells(human.id).get(`${cell.x},${cell.y}`)||null,regionsBefore=regionOwners();
+      claimCell(cell,human.id);state.actionsLeft--;addEvent('Territorio ganado','Se ganó 1 casilla.');sound('tap');toast('Territorio +1 · 1 movimiento usado');applyRegionChanges(regionsBefore,true);
       checkBattles(human.id,true,plannedOpponent);save();render();return;
     }
     if(cell.owner!==human.id&&disputableFrontier(human).some(c=>c.x===cell.x&&c.y===cell.y)){
@@ -730,13 +751,13 @@
     return true;
   }
   function resolveMatch(match,mode,frontCell,renderNow=true){
-    if(!commitMatchStats(match))return false;
+    const regionsBefore=regionOwners();if(!commitMatchStats(match))return false;
     const before=ownedTiles(humanTeam().id).length,ownersBefore=state.map.map(c=>c.owner);
     if(mode==='pressure')applyMatch(match,frontCell);
     if(mode==='direct'&&match.result==='home'&&frontCell.owner===match.awayId)claimCell(frontCell,match.homeId);
     const winnerId=match.result==='draw'?null:(match.result==='home'?match.homeId:match.awayId);
     if(winnerId&&state.map.some((c,i)=>ownersBefore[i]&&ownersBefore[i]!==winnerId&&c.owner===winnerId))match.conquestReward=rewardFirstConquest(winnerId);
-    match.territoryDelta=ownedTiles(humanTeam().id).length-before;
+    match.regionChanges=applyRegionChanges(regionsBefore,false);match.territoryDelta=ownedTiles(humanTeam().id).length-before;
     evaluateGameEnd();addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match');
     save();if(renderNow)render();return true;
   }
@@ -924,6 +945,7 @@
       const human=humanTeam(),involved=match.homeId===human.id||match.awayId===human.id,won=involved&&match.result===(match.homeId===human.id?'home':'away'),draw=match.result==='draw';
       const result=el('div',`result-banner ${draw?'draw':won?'win':'loss'}`);result.append(el('strong','',involved?(draw?'Empate':won?'Victoria':'Derrota'):'Resultado'),el('span','',`${involved?(draw?'+1 punto':won?'+3 puntos':'0 puntos'):'Liga'}${match.countsForLeague===false?' · Amistoso':''}${involved&&match.xp?` · +${match.xp} XP`:''}`));finalBox.append(result,matchGoalsSummary(match,home,away));if(isReplay)finalBox.append(el('small','rules-note','Resultado y premios ya registrados.'));
       if(involved&&Number.isFinite(match.territoryDelta))finalBox.append(el('div','rules-note',`Territorio: ${match.territoryDelta>0?'+':''}${match.territoryDelta} casillas${match.conquestReward?` · +${match.conquestReward} monedas por primera conquista`:''}`));
+      (match.regionChanges||[]).filter(change=>change.before===human.id||change.after===human.id).forEach(change=>{const gained=change.after===human.id,card=el('div',`region-result ${gained?'gained':'lost'}`);card.append(el('strong','',gained?`${change.name} dominada`:`${change.name} perdida`),el('span','',gained?`+${change.reward} monedas por ronda mientras la controles`:`Dejás de recibir +${change.reward} monedas por ronda`));finalBox.append(card);});
       if(match.star){const star=el('div','match-star'),info=el('div');info.append(el('span','panel-kicker','FIGURA'),el('strong','',match.star.name),el('small','',`${state.teams.find(t=>t.id===match.star.teamId)?.name||''} · ${match.star.pos} · ${match.star.goals} G · ${match.star.assists} A`));star.append(info,el('b','',String(match.star.rating)));finalBox.append(star);}
       if(match.playerRatings?.length){const details=el('details','match-ratings');details.append(el('summary','match-section-title','Rendimientos de los 22 jugadores'));match.playerRatings.forEach(p=>{const row=el('div','rating-row');row.append(el('span','',`${p.name} · ${state.teams.find(t=>t.id===p.teamId)?.name||''}`),el('b','',String(p.rating)));details.append(row);});finalBox.append(details);}
       finalBox.append(el('div','chronicle',match.chronicle));const bt=el('button','primary-button large',onClose?'Continuar':'Volver al mapa');bt.addEventListener('click',()=>dialog.close());finalBox.append(bt);
@@ -950,7 +972,7 @@
   function endTurn(){
     if(state.finished){showGameOver();return;}if(!currentTeam().human||state.pendingMatch)return;
     pendingSummary=[];state.pendingHumanMatchIds=state.pendingHumanMatchIds||[];
-    const ownersBefore=state.map.map(c=>c.owner);
+    const ownersBefore=state.map.map(c=>c.owner),regionsBeforeAi=regionOwners();
     const matchSummaries=[];
     for(let i=1;i<state.teams.length&&!state.finished;i++){
       if(ownedTiles(state.teams[i].id).length===0)continue;
@@ -976,6 +998,7 @@
       if(parts.length)pendingSummary.push(`${team.name}: ${parts.join(' · ')}.`);
     });
     matchSummaries.forEach(result=>pendingSummary.push(`Partido: ${result}.`));
+    regionChanges(regionsBeforeAi).forEach(change=>{if(change.before===humanTeam().id)pendingSummary.push(`${change.name} perdida: -${change.reward} monedas por ronda.`);else if(change.after===humanTeam().id)pendingSummary.push(`${change.name} dominada: +${change.reward} monedas por ronda.`);else if(change.after){const team=state.teams.find(t=>t.id===change.after);if(team)pendingSummary.push(`${team.name} dominó ${change.name} (+${change.reward}/ronda).`);}});
     if(!pendingSummary.length)pendingSummary.push('Sin cambios territoriales ni partidos.');
 
     evaluateGameEnd();
