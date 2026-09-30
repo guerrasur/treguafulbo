@@ -2,6 +2,12 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.4.1
+
+- el resumen de ronda ya no informa coordenadas o sectores concretos de expansión;
+- ahora resume por equipo cuántas casillas ganó y cuántas perdió durante la ronda;
+- los resultados de partidos siguen apareciendo de forma separada y compacta.
+
 ## v0.4.0
 
 - cuando el tablero queda completamente ocupado, las fronteras siguen siendo jugables: las casillas rivales adyacentes marcadas con ⚽ se pueden disputar;
