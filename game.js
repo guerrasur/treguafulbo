@@ -177,8 +177,8 @@
   }
   function migrateSeason(parsed){
     parsed.id=parsed.id||`legacy-${parsed.startedAt||Date.now()}`;ensureLeagueStructure(parsed);
-    if(parsed.seasonSchema!==2||!Array.isArray(parsed.fixtures)){
-      parsed.fixtures=makeFixtures(parsed.teams);rebuildLeague(parsed);parsed.seasonSchema=2;parsed.pendingMatch=null;
+    if(![2,3].includes(parsed.seasonSchema)||!Array.isArray(parsed.fixtures)){
+      parsed.fixtures=makeFixtures(parsed.teams);rebuildLeague(parsed);parsed.seasonSchema=3;parsed.pendingMatch=null;
       parsed.finished=parsed.fixtures.every(f=>f.matchId);parsed.finishReason=parsed.finished?'league':null;parsed.winnerId=null;
       parsed.events.unshift({title:'Liga actualizada',text:'Calendario de 6 partidos por equipo. Los cruces excedentes se conservan como amistosos.',type:'normal'});
     }
@@ -188,7 +188,7 @@
       t.starters=(t.starters||[]).filter(id=>t.inventory.includes(id));
       if(t.starters.length!==11||new Set(t.starters).size!==11){const fresh=makeRoster();t.inventory=[...new Set([...t.inventory,...fresh])];t.starters=fresh;}
     });
-    if(parsed.finished&&!parsed.winnerIds){const sorted=rankTeamsFor(parsed);parsed.winnerIds=sorted.filter(t=>t.rank===1).map(t=>t.id);parsed.winnerId=parsed.winnerIds[0];}
+    parsed.seasonSchema=3;if(parsed.finished&&!parsed.winnerIds){const sorted=rankTeamsFor(parsed);parsed.winnerIds=sorted.filter(t=>t.rank===1).map(t=>t.id);parsed.winnerId=parsed.winnerIds[0];}
   }
   function headToHead(t,group,matches){
     let points=0,dg=0,gf=0;
@@ -604,7 +604,7 @@
     tb.winnerId=winnerId;
     if(tb.scope==='tournament'){state.pendingTiebreaker=null;finalizeTournament(winnerId);}
     else{state.pendingTiebreaker=null;finalizeLeague(winnerId,'desempate');}
-    save();render();setTimeout(()=>showGameOver(),0);
+    save();if(document.querySelector?.('#gameScreen')){render();setTimeout(()=>showGameOver(),0);}
   }
   function resolveAutoTiebreaker(tb){
     const winner=tb.match.result==='draw'?automaticPenaltyWinner(tb.homeId,tb.awayId):(tb.match.result==='home'?tb.homeId:tb.awayId);
@@ -720,7 +720,7 @@
     $('#penaltyTitle').textContent=tb.scope==='league'?'Desempate de Liga':'Desempate del Torneo';$('#penaltyTeams').textContent=`${home.name} ${p.home} – ${p.away} ${away.name}`;$('#penaltyRound').textContent=`Ronda ${p.round+1} · elegí dónde patear y dónde atajar. Las elecciones se revelan juntas.`;
     $$('#penaltyDialog [data-penalty-kick]').forEach(b=>b.classList.toggle('selected',b.dataset.penaltyKick===p.selectedKick));$$('#penaltyDialog [data-penalty-dive]').forEach(b=>b.classList.toggle('selected',b.dataset.penaltyDive===p.selectedDive));
     const history=$('#penaltyHistory');history.innerHTML='';p.rounds.slice(-5).forEach((r,i)=>history.append(el('div','penalty-history-row',`${p.rounds.length-4+i>0?p.rounds.length-4+i:p.rounds.indexOf(r)+1}. ${r.homeGoal?'Gol':'Atajado'} / ${r.awayGoal?'Gol':'Atajado'}`)));
-    $('#penaltyConfirmButton').disabled=!(p.selectedKick&&p.selectedDive);dialog.showModal();
+    $('#penaltyConfirmButton').disabled=!(p.selectedKick&&p.selectedDive);if(!dialog.open)dialog.showModal();
     dialog.dataset.humanHome=String(humanHome);
   }
   function resolvePenaltyRound(){
