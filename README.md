@@ -2,6 +2,15 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.3.0
+
+- indicador **Frente** con progreso hacia el próximo partido;
+- casillas ⚽ que muestran qué expansión dispara un encuentro;
+- reproducción acelerada del partido desde 0' a 90', sin revelar el resultado de entrada;
+- pausa y parpadeo al producirse un gol;
+- remates, tiros al arco y xG se actualizan durante la reproducción; figura y rendimientos aparecen al final;
+- botón **Mejor XI**: ubica automáticamente a los mejores jugadores disponibles en sus posiciones naturales sin consumir acciones.
+
 ## v0.2.1
 
 - botón **Actualizar** en la barra superior cuando `version.json` detecta una versión nueva;

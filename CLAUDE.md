@@ -22,6 +22,14 @@ Tomar el concept art aprobado como norte: tablero táctico colorido, papel crema
 
 Usar texto mínimo, neutro, directo y funcional. Evitar jerga, chistes, tono canchero, frases grandilocuentes o intentos de complicidad.
 
+## Presentación del partido
+
+- No mostrar el resultado completo inmediatamente al generarse el partido.
+- Reproducir el encuentro de forma acelerada del 0' al 90' usando los eventos ya simulados; la animación NO puede recalcular el resultado.
+- Los goles deben frenar brevemente la reproducción y tener énfasis visual.
+- Antes de un partido, mostrar claramente el progreso del frente y qué casilla puede dispararlo.
+- Mantener **Mejor XI** como acción gratuita de gestión del plantel: debe escoger los mejores futbolistas disponibles para ARQ/DEF/MED/DEL respetando posiciones.
+
 ## Dirección de partidos
 
 - Los partidos son 100% simulados. NO agregar minijuegos, QTE, tiros manuales ni decisiones durante el encuentro.
