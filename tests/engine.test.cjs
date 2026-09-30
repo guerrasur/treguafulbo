@@ -99,7 +99,7 @@ for(const n of [2,3,4])test(`${n} equipos: Torneo finito de 6 PJ y premio de Lig
     assert.equal(s.league.history.length,1);
     assert.equal(s.tournament.placements.length,n);
     const awarded=s.tournament.placements.map(x=>x.leaguePoints);
-    assert.deepEqual(awarded,[5,3,2,1].slice(0,n));
+    assert.equal(Array.from(awarded).join(','),[5,3,2,1].slice(0,n).join(','));
   }
 });
 
@@ -127,7 +127,7 @@ test('Los puntos de Liga son 5/3/2/1 y una ventaja inalcanzable cierra antes',()
       s=g.createTournamentState(league,identities,tournament+1);g.setState(s);
     }
   }
-  assert.deepEqual(Object.values(league.points),[20,12,8,4]);
+  assert.equal(Object.values(league.points).join(','),'20,12,8,4');
   assert.equal(league.history.length,4);
   assert.equal(league.finished,true);
   assert.equal(league.earlyClinched,true);
