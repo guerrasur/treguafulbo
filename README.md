@@ -1,5 +1,17 @@
 # Treguafulbo
 
+## v0.6.1
+
+Actualización de UX sobre el `main` v0.6.0 (`f06dea9`), sin cambiar liga, balance ni simulación de partidos.
+
+- interfaz de turno reorganizada alrededor del mapa: HUD compacto, liga, frente, mapa y acciones auxiliares;
+- **Expandir deja de ser un selector**: una casilla libre válida o una frontera disputable se puede tocar directamente siempre que queden acciones;
+- volver desde Plantel, Liga o Mercado deja el mapa listo para expandir; abrir un paquete tampoco desactiva la expansión;
+- Fichar, Paquete y Plantel quedan junto al mapa; AVG de rivales y eventos pasan a paneles secundarios desplegables;
+- mobile-first: menos márgenes, tarjetas más bajas, acciones táctiles de 48 px, frente antes del mapa y navegación fija preservada;
+- escritorio conserva el mapa como elemento principal con un rail lateral compacto;
+- compatibilidad de guardado intacta: se mantiene `treguafulbo-demo-v1` y la migración anterior.
+
 Demo offline de fútbol y conquista territorial.
 
 ## v0.6.0
