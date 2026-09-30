@@ -12,6 +12,7 @@ Jugar sin presión, poder observar y pensar, y cerrar el turno de forma voluntar
 - NO cerrar turnos automáticamente.
 - NO premiar velocidad ni castigar pausas.
 - Inspeccionar mapa, plantel, liga y reglas es gratis.
+- Conservar entre actualizaciones y nuevas partidas el último nombre de club y los dos colores elegidos por el jugador.
 - El multiplayer futuro debe resumir lo sucedido desde la última visita.
 
 ## Dirección visual
