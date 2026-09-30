@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.6.3</small>
+        <small id="versionLabel">v0.7.0</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,7 +35,7 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.6.3</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.7.0</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -51,12 +51,12 @@
             <div class="turn-team-copy">
               <span class="status-kicker">MI EQUIPO</span>
               <strong id="currentTeamLabel">—</strong>
-              <div class="team-metrics"><span>AVG <b id="teamAvg">—</b></span><span>Territorio <b id="territoryCount">—</b></span></div>
+              <div class="team-metrics"><span>AVG <b id="teamAvg">—</b></span><span>Territorio <b id="territoryCount">—</b></span><span>Monedas <b id="coinCount">—</b></span><span>Regiones <b id="regionCount">—</b></span></div>
               <span id="turnTeamName" class="sr-only">—</span>
             </div>
           </div>
           <div class="turn-actions-left">
-            <span class="status-kicker">ACCIONES</span>
+            <span class="status-kicker">MOVIMIENTOS</span>
             <div class="action-pips" id="actionPips" aria-label="Acciones restantes"></div>
           </div>
           <button id="endTurnButton" class="end-turn-button">Terminar turno</button>
@@ -85,12 +85,14 @@
                 </section>
 
                 <section class="map-actions" aria-label="Acciones del turno">
-                  <div class="map-action-title"><span>⚑</span><strong>Expandir activo</strong><small>El mapa ocupa o disputa al tocar una casilla válida.</small></div>
+                  <div class="map-action-title"><span>⚑</span><strong id="mapActionTitle">Expandir / atacar</strong><small id="mapActionCopy">Casilla libre o rival ⚽ · 1 movimiento.</small></div>
                   <div class="action-grid">
-                    <button class="action-button" data-action="market"><span>🛒</span><div><strong>Fichar</strong><small>1 acción</small></div></button>
-                    <button class="action-button" data-action="pack"><span>📦</span><div><strong>Paquete</strong><small>1 acción</small></div></button>
+                    <button class="action-button" data-action="reinforce"><span>◆</span><div><strong>Reforzar</strong><small>1 movimiento</small></div></button>
+                    <button class="action-button" data-action="market"><span>🛒</span><div><strong>Fichar</strong><small>6–16 monedas</small></div></button>
+                    <button class="action-button" data-action="pack"><span>📦</span><div><strong>Paquete</strong><small id="packActionCost">12 monedas</small></div></button>
                     <button class="action-button" data-action="squad"><span>👥</span><div><strong>Plantel</strong><small>Gratis</small></div></button>
                   </div>
+                  <small id="incomeHint" class="income-hint">Próxima ronda: —</small>
                 </section>
 
                 <div class="map-secondary">
@@ -146,7 +148,7 @@
 
       <section id="marketScreen" class="screen sub-screen hidden">
         <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">MERCADO</span><h2>Fichajes</h2></div></div>
-        <div id="scoutingInfo" class="notice-card">El territorio define cuántos jugadores observás por ronda. Fichar cuesta 1 acción.</div><label class="squad-tools">Posición <select id="marketFilter"><option value="all">Todas</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label>
+        <div id="scoutingInfo" class="notice-card">El territorio define cuántos jugadores observás por ronda. Fichar cuesta monedas y no consume movimientos.</div><label class="squad-tools">Posición <select id="marketFilter"><option value="all">Todas</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label>
         <div id="marketList" class="market-list"></div>
       </section>
 
@@ -192,15 +194,17 @@
     <div class="dialog-heading"><div><span class="panel-kicker">CÓMO SE JUEGA</span><h2>Reglas básicas</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
     <ol class="help-steps">
       <li><b>Objetivo.</b> Terminar primero en la liga. Cada equipo completa exactamente 6 partidos.</li>
-      <li><b>Expandir.</b> Hay 3 acciones por turno. Mientras haya espacio accesible, se ocupan casillas libres adyacentes. Si tu equipo queda sin expansión libre —o el mapa está completo—, las casillas rivales de frontera se pueden disputar.</li>
-      <li><b>Plantel.</b> Fichar y abrir paquetes consume 1 acción. El Mercado muestra 3–6 jugadores observados por ronda según el territorio al iniciarla. Reorganizar titulares sigue siendo gratis.</li>
-      <li><b>Stats.</b> Cada jugador tiene ATQ, PAS, DEF y ARQ. La posición natural y el puesto ocupado en el once afectan su aporte.</li>
-      <li><b>Partido.</b> Durante la expansión, tres casillas propias adyacentes a una rival pueden generar un partido. Si ya no tenés expansión libre, una casilla rival de frontera marcada con ⚽ inicia un partido directo.</li>
-      <li><b>Simulación.</b> El encuentro es 100% automático: no hay controles dentro del partido. El XI define ataque, mediocampo, defensa y arquero; el azar sigue permitiendo resultados inesperados.</li>
-      <li><b>Informe.</b> Se guardan posesión, remates, tiros al arco, xG, atajadas, goles, asistencias, figura y minuto a minuto.</li>
-      <li><b>Resultado.</b> El marcador modifica territorio y liga. En una disputa directa, ganar captura la casilla elegida; empate o derrota mantienen ese sector rival.</li>
-    </ol>
-    <ol class="help-steps" start="9"><li><b>Liga.</b> Cada equipo completa 6 partidos. Los cruces territoriales cuentan para el calendario. Al cerrar la ronda, se juegan encuentros pendientes si no hubo un cruce territorial. Podés verlos en Liga.</li><li><b>Victoria.</b> Gana el primero de la tabla: puntos, diferencia de gol, goles a favor y enfrentamientos directos. Si persiste la igualdad, se comparte posición. El territorio no suma puntos.</li><li><b>Premios.</b> Cada partido suma experiencia al registro personal. Al terminar recibís una medalla según posición. El álbum conserva los jugadores descubiertos sin mejorar planteles de futuras ligas.</li><li><b>Paquetes.</b> Se obtienen hasta 5 jugadores nuevos, sin duplicados. La rareza describe el rating; los mejores tienen menor peso. Si completaste el plantel, la opción se desactiva.</li></ol><div class="rules-note">Sin reloj. El turno termina manualmente. Perder territorio no elimina al equipo de la liga. Empate por presión: reparto de zona. Empate directo: el defensor conserva la casilla.</div>
+      <li><b>Movimientos.</b> Tenés 3 por turno. Podés expandirte a una casilla libre, atacar una casilla rival adyacente o reforzar una casilla propia de frontera.</li>
+      <li><b>Monedas.</b> Fichajes y paquetes se pagan con monedas y no gastan movimientos. Empezás con 30.</li>
+      <li><b>Ingresos.</b> Al iniciar una nueva ronda cobrás por territorio. Cada región completa de 8 casillas agrega +3 monedas.</li>
+      <li><b>Conquista.</b> La primera casilla rival que conquistás en una ronda entrega +5 monedas. Conquistas posteriores de esa ronda no repiten el premio.</li>
+      <li><b>Dado.</b> Al empezar cada ronda se tira un dado virtual. Sólo modifica un pequeño bonus de monedas; nunca decide partidos.</li>
+      <li><b>Refuerzo.</b> Una casilla reforzada da +4 DEF local cuando es atacada. El refuerzo desaparece si la casilla cambia de dueño.</li>
+      <li><b>Plantel.</b> El Mercado muestra 3–6 jugadores observados según tu territorio. Reorganizar titulares es gratis.</li>
+      <li><b>Partido.</b> Los ataques y cruces territoriales se resuelven con un partido 100% simulado según el XI y sus stats.</li>
+      <li><b>Liga.</b> Victoria 3 puntos, empate 1. Los cruces territoriales cuentan para el calendario de 6 partidos.</li>
+      <li><b>Final.</b> Gana el primero de la tabla. El territorio mejora tu economía, pero no suma puntos de liga.</li>
+    </ol><div class="rules-note">Sin reloj. El turno termina manualmente. Los 3 movimientos se reservan para el mapa; administrar plantel, fichar y abrir paquetes no consume movimientos.</div>
   </dialog>
 
   <dialog id="matchDialog" class="game-dialog match-dialog">
@@ -226,6 +230,6 @@
     <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
   </dialog>
 
-  <script src="game.js?v=0.6.4" defer></script>
+  <script src="game.js?v=0.7.0" defer></script>
 </body>
 </html>

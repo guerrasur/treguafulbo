@@ -1,5 +1,17 @@
 # Treguafulbo
 
+## v0.7.0
+
+- los 3 puntos del turno pasan a ser **movimientos territoriales**: expandir, atacar una frontera rival o reforzar una casilla propia;
+- fichajes y paquetes dejan de gastar movimientos: cuestan monedas (fichajes 6/9/12/16 según nivel; paquete 12);
+- cada equipo empieza con 30 monedas y cobra por territorio al comenzar una nueva ronda; una región completa de 8 casillas suma +3;
+- la primera conquista rival de cada ronda entrega +5 monedas;
+- se puede atacar una casilla rival adyacente aunque todavía queden casillas neutrales disponibles;
+- reforzar cuesta 1 movimiento y da +4 DEF local mientras la casilla siga en manos del mismo equipo;
+- un dado virtual se tira al comienzo de cada ronda y entrega sólo un bonus económico pequeño; nunca interviene en el resultado de los partidos;
+- la IA usa los mismos movimientos y puede invertir monedas en jugadores;
+- se mantienen la liga de 6 partidos, scouting territorial, simulación minuto a minuto y guardados anteriores.
+
 ## v0.6.4
 
 El territorio ahora alimenta el scouting del Mercado sin dar puntos ni bonus directos al equipo.
@@ -138,7 +150,7 @@ Los cruces territoriales consumen un encuentro de esa pareja en el calendario. E
 ## Decisiones provisorias
 
 - Inicio: 3 casillas por equipo.
-- Economía: todavía no implementada. Fichar o abrir paquete consume 1 acción y no dinero.
+- Economía: implementada. Territorio y regiones generan monedas; fichajes y paquetes usan monedas y no consumen movimientos.
 - Partido: se muestra al generarse y luego continúa el turno.
 - Empate: en un cruce por presión territorial, la zona se divide; en una disputa directa de frontera, la casilla defendida no cambia de dueño.
 
