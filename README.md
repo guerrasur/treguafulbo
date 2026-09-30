@@ -2,6 +2,16 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.4.0
+
+- cuando el tablero queda completamente ocupado, las fronteras siguen siendo jugables: las casillas rivales adyacentes marcadas con ⚽ se pueden disputar;
+- disputar una frontera consume 1 acción y genera un partido; si el atacante gana, captura la casilla elegida; empate o derrota mantienen el sector defensor;
+- la IA también disputa fronteras cuando ya no quedan casillas libres;
+- el menú **Plantel** fue reorganizado con cabecera de equipo, AVG general destacado, posición, PJ, puntos y titulares agrupados por puesto;
+- comparación visible del **AVG general** de todos los equipos en Plantel y en el mapa;
+- la tabla de Liga incorpora una columna AVG;
+- los paneles de frente muestran el AVG propio y el del rival cuando hay un cruce próximo o activo.
+
 ## v0.3.0
 
 - indicador **Frente** con progreso hacia el próximo partido;
