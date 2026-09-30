@@ -61,6 +61,13 @@ Problema técnico principal: para que funcione bien no alcanza con agregar boton
 
 Antes de implementar esta dirección hay que prototipar por separado al menos: remate al arco, pase/centro y cómo se generan/distribuyen las oportunidades según AVG, sin comprometer todavía el sistema de liga ni el mapa.
 
+## v0.5.1
+
+- Todo partido generado durante el turno de una IA que involucre al humano debe mostrarse al comenzar el siguiente turno humano. No alcanza con incluir el resultado en el resumen.
+- Si hay varios partidos pendientes contra el humano, reproducirlos en orden antes de mostrar el resumen de ronda.
+- La partida termina si el humano queda sin territorio o si sólo queda un equipo con territorio.
+- Un equipo con 0 casillas queda eliminado y no vuelve a ejecutar turnos.
+- Persistir partidos pendientes y estado de fin de partida para que una recarga no saltee el cierre.
 ## v0.5.0
 
 - Una nueva partida debe resetear la acción activa a **Expandir**.
