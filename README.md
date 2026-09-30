@@ -1,5 +1,13 @@
 # Treguafulbo
 
+## v0.7.1
+
+Hotfix de render:
+- corrige el selector de acciones que detenía el render principal;
+- el plantel vuelve a mostrarse sin alterar el inventario guardado;
+- abrir paquetes vuelve a completar el flujo y mostrar las cartas adquiridas;
+- no cambia economía, movimientos, liga ni balance de v0.7.0.
+
 ## v0.7.0
 
 - los 3 puntos del turno pasan a ser **movimientos territoriales**: expandir, atacar una frontera rival o reforzar una casilla propia;

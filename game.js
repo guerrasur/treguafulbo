@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.7.0';
+  const VERSION = '0.7.1';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -550,7 +550,7 @@
   function renderFeed(){ const f=$('#eventFeed'); f.innerHTML=''; state.events.slice(0,8).forEach(ev=>{const d=el('div',`event ${ev.type==='match'?'match':''}`);d.append(el('strong','',ev.title),el('span','',ev.text));f.appendChild(d);}); if(!state.events.length)f.textContent='Sin novedades todavía.'; }
   function renderButtons(){
     const human=humanTeam(),humanTurn=currentTeam().human&&!state.finished;
-    $('.action-button').forEach(b=>{
+    $$('.action-button').forEach(b=>{
       const action=b.dataset.action;let disabled=!humanTurn;
       if(action==='pack')disabled=disabled||human.inventory.length>=PLAYERS.length||human.coins<CONFIG.packCost;
       if(action==='reinforce')disabled=disabled||state.actionsLeft<=0||reinforceableCells(human).length===0;
