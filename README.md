@@ -1,5 +1,24 @@
 # Treguafulbo
 
+## v0.9.0
+
+La partida ahora tiene cuatro escalas claras: **Partido → Torneo → Liga → Prestigio**.
+
+- cada Torneo mantiene 6 PJ por equipo, 3/1/0 puntos y el mismo motor territorial/de partidos;
+- una Liga dura hasta 5 Torneos y acumula puntos por posición: **1.º 5, 2.º 3, 3.º 2, 4.º 1**;
+- si el líder ya no puede ser alcanzado matemáticamente, la Liga termina antes;
+- empate en el primer puesto de un Torneo = partido de desempate; si empata, penales con elección de dirección para patear y atajar;
+- empates múltiples se resuelven mediante una serie de desempates, no eliminando equipos por orden arbitrario;
+- al comenzar cada Torneo se reinician monedas, planteles, tabla, calendario, scouting y mapa;
+- el tablero genera una silueta procedural conectada en cada Torneo;
+- Liga y Torneos reciben identidad temática procedural a partir de una lista curada de pueblos/culturas originarias latinoamericanas;
+- el campeón de Liga obtiene únicamente un trofeo/badge y contador de Ligas ganadas; no hay ventaja estadística;
+- al inicio de cada Torneo se muestra el XI recibido;
+- **Asignar automáticamente** ahora informa qué jugadores entran y salen;
+- se conserva entre actualizaciones el último nombre y colores del club;
+- el modelo de datos contempla altas tardías entre Torneos (`pendingEntrants` / `joinedTournament`) e IDs independientes por Liga para el futuro online;
+- esta demo offline sigue teniendo una sola Liga activa y rivales IA. Varias Ligas simultáneas requieren el backend multijugador futuro;
+- los saves competitivos anteriores a v0.9.0 se reinician deliberadamente; el progreso estético y la identidad del club se guardan aparte.
 ## v0.7.2
 
 - las 8 regiones ahora se identifican como **Zona A–H** directamente en el mapa;
@@ -159,11 +178,13 @@ PLAYWRIGHT_MODULE=/ruta/a/playwright CHROME_EXECUTABLE=/ruta/a/chromium node tes
 - guardado local con localStorage;
 - sin temporizador.
 
-## Regla de final vigente (v0.6.0)
+## Regla de final vigente (v0.9.0)
 
-Todos los equipos completan 6 PJ. La clasificación usa puntos, diferencia de gol, goles a favor y una minitabla de enfrentamientos directos entre los equipos empatados; si aún persiste igualdad, se comparte posición. El territorio no agrega puntos y perder todas las casillas no elimina de la liga.
+Cada **Torneo** hace que todos los equipos completen 6 PJ. La tabla usa 3/1/0; DG, GF y enfrentamientos directos siguen ordenando posiciones secundarias. Si el primer puesto termina empatado en puntos, el campeón se define con un partido extra y, si empata, penales.
 
-Los cruces territoriales consumen un encuentro de esa pareja en el calendario. El cierre manual de ronda garantiza los pendientes, incluso sin contacto entre equipos. Nadie juega más de 6 PJ; la liga termina al completar todas las fechas.
+Los cruces territoriales consumen un encuentro de esa pareja en el calendario. El cierre manual de ronda garantiza los pendientes, incluso sin contacto entre equipos. Al terminar el Torneo se convierten las posiciones en puntos de Liga (5/3/2/1) y el siguiente Torneo reinicia todos los recursos competitivos.
+
+La **Liga** termina después de un máximo de 5 Torneos o antes si el líder ya es matemáticamente inalcanzable. El campeón sólo recibe prestigio estético.
 
 ## Decisiones provisorias
 
@@ -194,11 +215,11 @@ Treguafulbo está pensado para multiplayer asincrónico con amigos y sin presió
 
 Demo estática sin backend ni build: `index.html` (estructura), `styles.css` (presentación) y `game.js` (reglas, estado e interfaz). GitHub Pages sirve `main`.
 
-Save actual: `treguafulbo-demo-v1`. Se conserva compatibilidad con `trucebol-demo-v1` para migrar partidas previas.
+Save competitivo actual: `treguafulbo-demo-v1` (`seasonSchema: 3`). La demo v0.9.0 reinicia saves competitivos anteriores; nombre/colores del club y trofeos se conservan en almacenamiento separado.
 
 ## Versionado
 
-La versión visible y `version.json` deben actualizarse juntos. Toda update debe revisar mobile, touch, persistencia, turnos, AVG, mapa y partidos.
+La versión visible y `version.json` deben actualizarse juntos. v0.9.0 usa nombres/IDs de Liga persistentes para que el backend futuro pueda guardar varias Ligas por usuario sin mezclar sus estados. Toda update debe revisar mobile, touch, persistencia, turnos, AVG, mapa y partidos.
 
 
 ## Dirección de partidos
