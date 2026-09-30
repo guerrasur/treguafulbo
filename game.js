@@ -457,10 +457,13 @@
     const roster=makeRoster();
     return {...team,inventory:[...roster],starters:[...roster],coins:CONFIG.startingCoins,points:0,played:0,wins:0,draws:0,losses:0,gf:0,ga:0,scorers:{}};
   }
+  function mapShapeSignature(map){return map.map(c=>c.active===false?'0':'1').join('');}
   function createTournamentState(league,teamIdentities,number){
-    const teams=teamIdentities.map(resetTeamForTournament),seed=`${league.id}|${league.edition||1}|${number}|${Date.now()}`;
+    const teams=teamIdentities.map(resetTeamForTournament),base=`${league.id}|${league.edition||1}|${number}`,used=new Set((league.history||[]).map(h=>h.mapSignature).filter(Boolean));
+    let salt=0,seed=base,map=initialMap(teams.length,seed);
+    while(used.has(mapShapeSignature(map))&&salt<24){salt++;seed=`${base}|reroll-${salt}`;map=initialMap(teams.length,seed);}
     league.currentTournament=number;
-    return {id:`tournament-${league.id}-${league.edition||1}-${number}-${Date.now()}`,fixtures:makeFixtures(teams),pendingMatch:null,pendingTiebreaker:null,seasonSchema:3,version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map:initialMap(teams.length,seed),events:[],matches:[],pendingHumanMatchIds:[],pendingTurnSummary:[],scouting:null,conquestRewarded:{},roundDie:null,finished:false,winnerId:null,winnerIds:[],finishReason:null,startedAt:Date.now(),league,tournament:{number,name:tournamentName(league,number),seed,rosterIntroSeen:false,awarded:false,championId:null,placements:[],finishedAt:null}};
+    return {id:`tournament-${league.id}-${league.edition||1}-${number}-${Date.now()}`,fixtures:makeFixtures(teams),pendingMatch:null,pendingTiebreaker:null,seasonSchema:3,version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map,events:[],matches:[],pendingHumanMatchIds:[],pendingTurnSummary:[],scouting:null,conquestRewarded:{},roundDie:null,finished:false,winnerId:null,winnerIds:[],finishReason:null,startedAt:Date.now(),league,tournament:{number,name:tournamentName(league,number),seed,mapSignature:mapShapeSignature(map),rosterIntroSeen:false,awarded:false,championId:null,placements:[],finishedAt:null}};
   }
   function teamIdentitiesFromCurrent(){
     return state.teams.map(t=>({id:t.id,name:t.name,colors:[...t.colors],human:!!t.human,leagueTitles:Number(t.leagueTitles)||0,joinedTournament:Number(t.joinedTournament)||1,inventory:[],starters:[],coins:0,points:0,played:0,wins:0,draws:0,losses:0,gf:0,ga:0,scorers:{}}));
@@ -632,7 +635,7 @@
   }
   function leagueClinchedId(){
     const rows=rankedLeagueTeams();if(rows.length<2||rows[0].points===rows[1].points)return null;
-    const remaining=Math.max(0,state.league.maxTournaments-state.league.history.length),minAward=leaguePlacementPoints(Math.min(state.teams.length,4)),swing=Math.max(0,leaguePlacementPoints(1)-minAward);
+    const remaining=Math.max(0,state.league.maxTournaments-state.league.history.length),futureTeams=Math.min(4,state.teams.length+(state.league.pendingEntrants?.length||0)),minAward=leaguePlacementPoints(futureTeams),swing=Math.max(0,leaguePlacementPoints(1)-minAward);
     return rows.slice(1).every(r=>rows[0].points>r.points+remaining*swing)?rows[0].team.id:null;
   }
   function finalizeLeague(championId,reason='tabla'){
@@ -656,7 +659,7 @@
     const ranking=uniqueTournamentRanking(championId),pointsAwarded={};
     ranking.forEach(r=>{const pts=leaguePlacementPoints(r.position);state.league.points[r.id]=(Number(state.league.points[r.id])||0)+pts;pointsAwarded[r.id]=pts;});
     state.tournament.championId=championId;state.tournament.placements=ranking.map(r=>({teamId:r.id,position:r.position,points:r.points,leaguePoints:pointsAwarded[r.id]}));state.tournament.finishedAt=Date.now();state.tournament.awarded=true;
-    state.league.history.push({number:state.tournament.number,name:state.tournament.name,championId,placements:clone(state.tournament.placements),finishedAt:state.tournament.finishedAt});
+    state.league.history.push({number:state.tournament.number,name:state.tournament.name,championId,placements:clone(state.tournament.placements),mapSignature:state.tournament.mapSignature||mapShapeSignature(state.map),finishedAt:state.tournament.finishedAt});
     state.league.currentTournament=state.tournament.number;
     const humanPlace=state.tournament.placements.find(x=>x.teamId===humanTeam().id)?.position||ranking.length;awardTournamentProgress(humanPlace);
     evaluateLeagueCompletion();
