@@ -36,7 +36,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 @media(max-width:560px){.squad-header{flex-wrap:wrap}.auto-xi-button{margin-left:0;width:100%}.front-status-card{order:-1}.goal-banner{font-size:20px}.match-minute{font-size:19px}}
 
 
-/* v0.4.1 — frontera activa + lectura de plantel/AVG */
+/* v0.5.0 — frontera activa + lectura de plantel/AVG */
 .team-overview-card{gap:7px}.team-overview-list{display:grid;gap:5px}.team-overview-row,.rival-avg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #d4c99f;padding-top:6px;font-size:11px}.team-overview-row:first-child,.rival-avg-row:first-child{border-top:0;padding-top:1px}.team-overview-row.human,.rival-avg-row.human{font-weight:1000}.team-overview-name,.rival-avg-name{display:flex;align-items:center;min-width:0}.team-overview-row strong,.rival-avg-row strong{white-space:nowrap;font-size:13px}
 .tile.disputable{outline:4px solid var(--yellow);outline-offset:-5px;box-shadow:inset 0 0 0 7px rgba(234,85,70,.36);animation:disputePulse .65s infinite alternate}.tile.disputable:before{content:"⚽";font-size:clamp(17px,3.5vw,29px)}@keyframes disputePulse{to{filter:brightness(1.14);transform:scale(.985)}}
 .squad-hero{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;margin-bottom:12px;background:linear-gradient(135deg,#fff7db,#eaf6ff)}.squad-hero-copy h3{font-size:24px;margin:2px 0 7px}.squad-overall{display:inline-flex;align-items:baseline;gap:8px;background:var(--yellow);border:2px solid var(--line);border-radius:10px;padding:6px 10px}.squad-overall span{font-size:9px;font-weight:1000;letter-spacing:.9px}.squad-overall strong{font-size:30px;line-height:1}.squad-season{display:grid;grid-template-columns:repeat(3,minmax(52px,1fr));gap:7px}.squad-season>div{min-width:52px;text-align:center;border:2px solid var(--line);border-radius:10px;background:white;padding:8px}.squad-season span{display:block;font-size:8px;font-weight:1000;letter-spacing:1px}.squad-season b{display:block;font-size:20px;margin-top:2px}
@@ -55,7 +55,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.4.1</small>
+        <small id="versionLabel">v0.5.0</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -74,7 +74,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.4.1</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.5.0</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Demo local. Un equipo controlado y rivales simulados.</p>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -205,15 +205,15 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   <dialog id="helpDialog" class="game-dialog">
     <div class="dialog-heading"><div><span class="panel-kicker">CÓMO SE JUEGA</span><h2>Reglas básicas</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
     <ol class="help-steps">
-      <li><b>Expandir.</b> Hay 3 acciones por turno. Mientras haya espacio, se ocupan casillas libres adyacentes. Cuando el mapa está completo, las casillas rivales de frontera se pueden disputar.</li>
+      <li><b>Expandir.</b> Hay 3 acciones por turno. Mientras haya espacio accesible, se ocupan casillas libres adyacentes. Si tu equipo queda sin expansión libre —o el mapa está completo—, las casillas rivales de frontera se pueden disputar.</li>
       <li><b>Plantel.</b> Fichar y abrir paquetes consume 1 acción. Reorganizar titulares sigue siendo gratis.</li>
       <li><b>Stats.</b> Cada jugador tiene ATQ, PAS, DEF y ARQ. La posición natural y el puesto ocupado en el once afectan su aporte.</li>
-      <li><b>Partido.</b> Durante la expansión, tres casillas propias adyacentes a una rival pueden generar un partido. Con el mapa completo, una casilla rival de frontera marcada con ⚽ inicia un partido directo.</li>
+      <li><b>Partido.</b> Durante la expansión, tres casillas propias adyacentes a una rival pueden generar un partido. Si ya no tenés expansión libre, una casilla rival de frontera marcada con ⚽ inicia un partido directo.</li>
       <li><b>Simulación.</b> El encuentro es 100% automático: no hay controles dentro del partido. El XI define ataque, mediocampo, defensa y arquero; el azar sigue permitiendo resultados inesperados.</li>
       <li><b>Informe.</b> Se guardan posesión, remates, tiros al arco, xG, atajadas, goles, asistencias, figura y minuto a minuto.</li>
       <li><b>Resultado.</b> El marcador modifica territorio y liga. En una disputa directa, ganar captura la casilla elegida; empate o derrota mantienen ese sector rival.</li>
     </ol>
-    <div class="rules-note">Sin reloj. El turno termina manualmente. En empate, la zona se divide.</div>
+    <div class="rules-note">Sin reloj. El turno termina manualmente. Empate en un cruce por presión: la zona se divide. Empate en una disputa directa: la casilla defendida no cambia de dueño.</div>
   </dialog>
 
   <dialog id="matchDialog" class="game-dialog match-dialog">
@@ -236,11 +236,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 (() => {
   'use strict';
 
-  const VERSION = '0.4.1';
+  const VERSION = '0.5.0';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
   const CONFIG = { gridSize: 8, actionsPerTurn: 3, startingTiles: 3, battleThreshold: 3, battleTransfer: 3 };
+  const MATCH_MINUTE_MS = 100;
+  const GOAL_PAUSE_MS = 1000;
 
   const PLAYERS = [
     ['dibuan','D. Martino',80,'ARQ'],['terstegen','M. Terseg',84,'ARQ'],['alisson','A. Becker',86,'ARQ'],['rulli','G. Rulio',78,'ARQ'],
@@ -279,6 +281,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
       parsed.events=Array.isArray(parsed.events)?parsed.events:[];
       parsed.matches=Array.isArray(parsed.matches)?parsed.matches:[];
       parsed.teams.forEach(t=>{t.scorers=t.scorers||{};});
+      const humanIndex=parsed.teams.findIndex(t=>t.human);
+      if(humanIndex>=0&&(!Number.isInteger(parsed.turnIndex)||!parsed.teams[parsed.turnIndex]||!parsed.teams[parsed.turnIndex].human))parsed.turnIndex=humanIndex;
+      if(!Number.isFinite(parsed.actionsLeft)||parsed.actionsLeft<0||parsed.actionsLeft>CONFIG.actionsPerTurn)parsed.actionsLeft=CONFIG.actionsPerTurn;
       if(fromLegacy)localStorage.setItem(SAVE_KEY,JSON.stringify(parsed));
       return parsed;
     }catch{return null;}
@@ -366,6 +371,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function newGame(name,colors,count){
     const teams=[makeTeam('t0',name,colors,true)];
     for(let i=1;i<count;i++){ const p=AI_PRESETS[i-1]; teams.push(makeTeam(`t${i}`,p.name,p.colors,false)); }
+    activeAction='expand';matchPlaybackToken++;
     state={version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map:initialMap(count),events:[],matches:[],startedAt:Date.now()};
     addEvent('Partida creada',`${CONFIG.startingTiles} sectores iniciales.`);
     save(); showGame();
@@ -374,9 +380,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function addEvent(title,text,type='normal'){ state.events.unshift({id:Date.now()+Math.random(),title,text,type}); state.events=state.events.slice(0,30); }
   function availableExpansion(team){ const seen=new Map(); ownedTiles(team.id).forEach(c=>neighbors(c).filter(n=>!n.owner).forEach(n=>seen.set(`${n.x},${n.y}`,n))); return [...seen.values()]; }
   function boardFull(){ return state.map.every(c=>!!c.owner); }
+  function frontierPhase(team){ return boardFull()||availableExpansion(team).length===0; }
   function pairPlayedThisRound(a,b){return state.matches.some(m=>m.round===state.round&&((m.homeId===a&&m.awayId===b)||(m.homeId===b&&m.awayId===a)));}
   function disputableFrontier(team){
-    if(!boardFull())return [];
+    if(!frontierPhase(team))return [];
     return state.map.filter(cell=>cell.owner&&cell.owner!==team.id&&neighbors(cell).some(n=>n.owner===team.id)&&!pairPlayedThisRound(team.id,cell.owner));
   }
   function frontPressures(teamId){
@@ -388,7 +395,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function matchTriggerCells(teamId){
     const available=new Set(availableExpansion(state.teams.find(t=>t.id===teamId)).map(c=>`${c.x},${c.y}`)),triggers=new Map();
     frontPressures(teamId).filter(x=>x.ownAdj===CONFIG.battleThreshold-1).forEach(front=>{
-      neighbors(front.cell).filter(n=>!n.owner&&available.has(`${n.x},${n.y}`)).forEach(n=>triggers.set(`${n.x},${n.y}`,front.defenderId));
+      neighbors(front.cell).filter(n=>!n.owner&&available.has(`${n.x},${n.y}`)).forEach(n=>{const key=`${n.x},${n.y}`;if(!triggers.has(key))triggers.set(key,front.defenderId);});
     });
     return triggers;
   }
@@ -396,31 +403,46 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     const card=$('#frontStatusCard');if(!card)return;
     const fill=$('#frontMeterFill'),title=$('#frontStatusTitle'),text=$('#frontStatusText'),human=humanTeam();
     card.classList.remove('hot');
-    if(boardFull()){
+    if(frontierPhase(human)){
       const disputes=disputableFrontier(human);
+      const rivals=[...new Set(disputes.map(c=>c.owner))].map(id=>state.teams.find(t=>t.id===id)).filter(Boolean);
       if(disputes.length){
-        const cell=disputes[0],rival=state.teams.find(t=>t.id===cell.owner);
         card.classList.add('hot');title.textContent='Frontera activa';fill.style.width='100%';
-        text.textContent=`${human.name} AVG ${teamAvg(human)} · ${rival.name} AVG ${teamAvg(rival)}. Elegí una casilla rival ⚽.`;
+        const prefix=boardFull()?'Mapa completo':'Sin expansión libre';
+        if(rivals.length===1){
+          const rival=rivals[0];
+          text.textContent=`${prefix}. ${human.name} AVG ${teamAvg(human)} · ${rival.name} AVG ${teamAvg(rival)}. Elegí una casilla rival ⚽.`;
+        }else{
+          text.textContent=`${prefix}. ${human.name} AVG ${teamAvg(human)} · ${rivals.map(r=>`${r.name} AVG ${teamAvg(r)}`).join(" · ")}. Elegí una casilla rival ⚽.`;
+        }
       }else{
         title.textContent='Sin cruce disponible';fill.style.width='100%';
         text.textContent='Ya enfrentaste a los rivales vecinos esta ronda. Podés terminar el turno.';
       }
       return;
     }
+
+    const triggers=matchTriggerCells(human.id);
+    if(triggers.size){
+      const rivals=[...new Set(triggers.values())].map(id=>state.teams.find(t=>t.id===id)).filter(Boolean);
+      card.classList.add('hot');title.textContent=`Partido próximo · ${CONFIG.battleThreshold-1}/${CONFIG.battleThreshold}`;fill.style.width=`${(CONFIG.battleThreshold-1)/CONFIG.battleThreshold*100}%`;
+      if(rivals.length===1){
+        const rival=rivals[0];
+        text.textContent=`${human.name} AVG ${teamAvg(human)} · ${rival.name} AVG ${teamAvg(rival)}. La casilla ⚽ dispara ese partido.`;
+      }else{
+        text.textContent=`${human.name} AVG ${teamAvg(human)} · ${rivals.map(r=>`${r.name} AVG ${teamAvg(r)}`).join(" · ")}. Cada casilla ⚽ indica su rival.`;
+      }
+      return;
+    }
+
     const best=frontPressures(human.id)[0];
     if(!best){
       title.textContent='Sin partido próximo';text.textContent='Expandí hacia otro equipo para formar un frente.';fill.style.width='0%';return;
     }
     const rival=state.teams.find(t=>t.id===best.defenderId),value=Math.min(CONFIG.battleThreshold,best.ownAdj);
     fill.style.width=`${value/CONFIG.battleThreshold*100}%`;
-    if(value===CONFIG.battleThreshold-1){
-      card.classList.add('hot');title.textContent=`Partido próximo · ${value}/${CONFIG.battleThreshold}`;
-      text.textContent=`${human.name} AVG ${teamAvg(human)} · ${rival.name} AVG ${teamAvg(rival)}. Las casillas ⚽ disparan el partido.`;
-    }else{
-      title.textContent=`Frente con ${rival.name} · ${value}/${CONFIG.battleThreshold}`;
-      text.textContent=`AVG ${teamAvg(human)} vs ${teamAvg(rival)} · faltan ${CONFIG.battleThreshold-value} contactos.`;
-    }
+    title.textContent=`Frente con ${rival.name} · ${value}/${CONFIG.battleThreshold}`;
+    text.textContent=`AVG ${teamAvg(human)} vs ${teamAvg(rival)} · faltan ${Math.max(0,CONFIG.battleThreshold-value)} contactos.`;
   }
 
   function renderTeamOverview(){
@@ -466,19 +488,19 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 
   function renderMap(){
     const map=$('#map'); map.innerHTML='';
-    const human=humanTeam(),available=new Set(availableExpansion(human).map(c=>`${c.x},${c.y}`)),fronts=frontCells(),pressures=frontPressures(human.id),pressureMap=new Map(pressures.map(x=>[`${x.cell.x},${x.cell.y}`,x])),triggers=matchTriggerCells(human.id);
+    const human=humanTeam(),frontierActive=frontierPhase(human),available=new Set(availableExpansion(human).map(c=>`${c.x},${c.y}`)),fronts=frontCells(),pressures=frontPressures(human.id),pressureMap=new Map(pressures.map(x=>[`${x.cell.x},${x.cell.y}`,x])),triggers=matchTriggerCells(human.id);
     const disputes=new Map(disputableFrontier(human).map(c=>[`${c.x},${c.y}`,c.owner]));
     state.map.forEach(cell=>{
       const key=`${cell.x},${cell.y}`,b=el('button','tile'); b.type='button'; b.setAttribute('role','gridcell'); b.dataset.x=cell.x; b.dataset.y=cell.y;
       if(cell.owner){const t=state.teams.find(t=>t.id===cell.owner);b.style.background=pattern(t);b.title=t.name;}
       if(currentTeam().human&&activeAction==='expand'&&state.actionsLeft>0&&!cell.owner&&available.has(key))b.classList.add('available');
       const pressure=pressureMap.get(key);
-      if(pressure&&!boardFull()){
+      if(pressure&&!frontierActive){
         b.classList.add('front-pressure');b.dataset.front=`${pressure.ownAdj}/${CONFIG.battleThreshold}`;
         if(pressure.ownAdj===CONFIG.battleThreshold-1)b.classList.add('near-match');
         const rival=state.teams.find(t=>t.id===pressure.defenderId);b.title=`${rival.name} · frente ${pressure.ownAdj}/${CONFIG.battleThreshold}`;
       }
-      if(triggers.has(key)&&!boardFull()){
+      if(triggers.has(key)&&!frontierActive){
         b.classList.add('match-trigger');
         const rival=state.teams.find(t=>t.id===triggers.get(key));b.title=`Ocupar esta casilla genera partido contra ${rival.name}`;
       }
@@ -486,13 +508,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
         const rival=state.teams.find(t=>t.id===disputes.get(key));
         b.classList.add('disputable');b.title=`Disputar sector contra ${rival.name} · AVG ${teamAvg(rival)}`;
       }
-      if(fronts.has(key)&&!boardFull())b.classList.add('front');
+      if(fronts.has(key)&&!frontierActive)b.classList.add('front');
       b.addEventListener('click',()=>handleTile(cell));map.appendChild(b);
     });
     const hint=$('#mapHint');
-    if(boardFull()){
-      if(disputes.size)hint.textContent='Mapa completo: disputá una casilla rival marcada con ⚽.';
-      else hint.textContent='Sin cruces territoriales disponibles en esta ronda.';
+    if(frontierActive){
+      if(disputes.size)hint.textContent=boardFull()?'Mapa completo: disputá una casilla rival marcada con ⚽.':'Sin expansión libre: disputá una casilla rival marcada con ⚽.';
+      else hint.textContent='Ya enfrentaste a los rivales vecinos esta ronda. Terminá el turno para habilitar nuevos cruces.';
     }else if(triggers.size)hint.textContent='⚽ Las casillas marcadas generan un partido al ocuparlas.';
     else{const best=pressures[0];hint.textContent=best?`Frente más cercano: ${best.ownAdj}/${CONFIG.battleThreshold}. Acercate para generar un partido.`:'Seleccioná una casilla libre marcada.';}
   }
@@ -505,8 +527,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     const human=humanTeam();
     if(!cell.owner){
       const allowed=availableExpansion(human).some(c=>c.x===cell.x&&c.y===cell.y);if(!allowed)return;
+      const plannedOpponent=matchTriggerCells(human.id).get(`${cell.x},${cell.y}`)||null;
       cell.owner=human.id;state.actionsLeft--;addEvent('Territorio ganado',`Avanzaste sobre el sector ${cell.x+1}-${cell.y+1}.`);
-      checkBattles(human.id,true);save();render();return;
+      checkBattles(human.id,true,plannedOpponent);save();render();return;
     }
     if(cell.owner!==human.id&&disputableFrontier(human).some(c=>c.x===cell.x&&c.y===cell.y)){
       state.actionsLeft--;playFrontierDispute(human.id,cell,true);save();render();
@@ -575,11 +598,12 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     SLOTS.forEach(slot=>{
       let candidates=remaining.filter(p=>p.pos===slot);
       if(!candidates.length)candidates=[...remaining];
-      candidates.sort((a,b)=>slotStrength(b,slot)-slotStrength(a,slot)||b.rating-a.rating);
+      if(candidates.every(p=>p.pos===slot))candidates.sort((a,b)=>b.rating-a.rating||slotStrength(b,slot)-slotStrength(a,slot));
+      else candidates.sort((a,b)=>(b.rating*fitFactor(b,slot))-(a.rating*fitFactor(a,slot))||slotStrength(b,slot)-slotStrength(a,slot));
       const best=candidates[0];if(!best)return;
       picked.push(best.id);remaining.splice(remaining.findIndex(p=>p.id===best.id),1);
     });
-    if(picked.length===11){team.starters=picked;addEvent('Plantel','Mejor XI aplicado por posición.');save();render();}
+    if(picked.length===11){team.starters=picked;addEvent('Plantel','Mejor XI aplicado por AVG y posición.');save();render();}
   }
   function toggleStarter(id,isStarter){
     const team=humanTeam();
@@ -596,12 +620,38 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     save();render();
   }
 
-  function battleCandidates(provokerId){ const out=[]; state.map.filter(c=>c.owner&&c.owner!==provokerId).forEach(c=>{ const ownAdj=neighbors(c).filter(n=>n.owner===provokerId).length; if(ownAdj>=CONFIG.battleThreshold) out.push({cell:c,defenderId:c.owner,ownAdj}); }); return out.sort((a,b)=>b.ownAdj-a.ownAdj); }
-  function checkBattles(provokerId,show){
-    const candidates=battleCandidates(provokerId).filter(c=>!state.matches.some(m=>m.round===state.round&&((m.homeId===provokerId&&m.awayId===c.defenderId)||(m.homeId===c.defenderId&&m.awayId===provokerId))));
-    const c=candidates[0]; if(!c)return null;
-    const match=simulateMatch(provokerId,c.defenderId,c.cell); applyMatch(match,c.cell); state.matches.push(match);
-    addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match'); if(show)showMatch(match); return match;
+  function battleCandidates(provokerId){ const out=[]; state.map.filter(c=>c.owner&&c.owner!==provokerId).forEach(c=>{ const ownAdj=neighbors(c).filter(n=>n.owner===provokerId).length; if(ownAdj>=CONFIG.battleThreshold) out.push({cell:c,defenderId:c.owner,ownAdj}); }); return out.sort((a,b)=>b.ownAdj-a.ownAdj||a.cell.y-b.cell.y||a.cell.x-b.cell.x); }
+  function commitMatchStats(match){
+    if(state.matches.some(m=>m.id===match.id))return false;
+    const a=state.teams.find(t=>t.id===match.homeId),b=state.teams.find(t=>t.id===match.awayId);
+    if(!a||!b)return false;
+    const ga=match.homeGoals,gb=match.awayGoals;
+    a.played++;b.played++;a.gf+=ga;a.ga+=gb;b.gf+=gb;b.ga+=ga;
+    if(match.result==='draw'){a.draws++;b.draws++;a.points++;b.points++;}
+    else{
+      const winner=match.result==='home'?a:b,loser=match.result==='home'?b:a;
+      winner.wins++;winner.points+=3;loser.losses++;
+    }
+    (match.goals||[]).forEach(g=>{
+      const team=state.teams.find(t=>t.id===g.teamId);
+      if(team&&g.playerId)team.scorers[g.playerId]=(team.scorers[g.playerId]||0)+1;
+    });
+    state.matches.push(match);
+    return true;
+  }
+  function finalizeBattle(match,frontCell){
+    if(!commitMatchStats(match))return false;
+    applyMatch(match,frontCell);
+    addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match');
+    save();render();return true;
+  }
+  function checkBattles(provokerId,show,preferredDefenderId=null){
+    const candidates=battleCandidates(provokerId).filter(c=>!pairPlayedThisRound(provokerId,c.defenderId));
+    const c=(preferredDefenderId?candidates.find(x=>x.defenderId===preferredDefenderId):null)||candidates[0];if(!c)return null;
+    const match=simulateMatch(provokerId,c.defenderId,c.cell);
+    const finalize=()=>finalizeBattle(match,c.cell);
+    if(show)showMatch(match,finalize);else finalize();
+    return match;
   }
 
   function calculatePerformances(teams,events,score,stats){
@@ -646,24 +696,23 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
         if(Math.random()<goalProb){
           score[side]++;
           const assisted=creator&&Math.random()<.76;
-          const event={type:'goal',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,assistId:assisted?creator.p.id:null,assistName:assisted?creator.p.name:null,xg:round1(xg)};
+          const event={type:'goal',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,assistId:assisted?creator.p.id:null,assistName:assisted?creator.p.name:null,xg};
           events.push(event);goals.push({teamId:attacking.id,side:side===0?'home':'away',playerId:shooter.p.id,playerName:shooter.p.name,minute});
           attacking.scorers[shooter.p.id]=(attacking.scorers[shooter.p.id]||0)+1;
         }else{
           stats[other].saves++;
-          events.push({type:'save',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,defenderTeamId:defending.id,xg:round1(xg)});
+          events.push({type:'save',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,defenderTeamId:defending.id,xg});
         }
       }else if(Math.random()<.42){
         const defender=pickMatchPlayer(defending,'defend');
-        events.push({type:'block',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,defenderTeamId:defending.id,defenderId:defender?.p.id||null,defenderName:defender?.p.name||'la defensa',xg:round1(xg)});
+        events.push({type:'block',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,defenderTeamId:defending.id,defenderId:defender?.p.id||null,defenderName:defender?.p.name||'la defensa',xg});
       }else{
-        events.push({type:'miss',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,xg:round1(xg)});
+        events.push({type:'miss',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,xg});
       }
     }
     events.sort((x,y)=>x.minute-y.minute);goals.sort((x,y)=>x.minute-y.minute);
-    const totalAttacks=Math.max(1,stats[0].attacks+stats[1].attacks);stats[0].possession=Math.round(stats[0].attacks/totalAttacks*100);stats[1].possession=100-stats[0].possession;stats.forEach(x=>x.xg=round1(x.xg));
+    const totalAttacks=Math.max(1,stats[0].attacks+stats[1].attacks);stats[0].possession=Math.round(stats[0].attacks/totalAttacks*100);stats[1].possession=100-stats[0].possession;
     const ga=score[0],gb=score[1],result=ga===gb?'draw':ga>gb?'home':'away',winner=result==='draw'?null:(result==='home'?a:b),loser=result==='draw'?null:(result==='home'?b:a);
-    a.played++;b.played++;a.gf+=ga;a.ga+=gb;b.gf+=gb;b.ga+=ga;if(result==='draw'){a.draws++;b.draws++;a.points++;b.points++;}else{winner.wins++;winner.points+=3;loser.losses++;}
     const playerRatings=calculatePerformances(teams,events,score,stats),star=playerRatings[0]||null;
     const chronicle=result==='draw'?'Empate. Zona dividida.':`${winner.name} gana el partido.`;
     return {id:`m${Date.now()}${Math.random()}`,round:state.round,homeId:a.id,awayId:b.id,homeName:a.name,awayName:b.name,homeGoals:ga,awayGoals:gb,avgHome:avA,avgAway:avB,profiles,stats,events,playerRatings,star,result,goals,chronicle,front:{x:frontCell.x,y:frontCell.y},createdAt:Date.now()};
@@ -679,18 +728,20 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function playFrontierDispute(attackerId,cell,show){
     const defenderId=cell.owner,attacker=state.teams.find(t=>t.id===attackerId),defender=state.teams.find(t=>t.id===defenderId);
     if(!attacker||!defender||attacker.id===defender.id)return null;
+    const target={x:cell.x,y:cell.y,owner:defenderId};
     const match=simulateMatch(attacker.id,defender.id,cell);
-    if(match.result==='home'){
-      cell.owner=attacker.id;
-      match.chronicle=`${attacker.name} gana y toma el sector ${cell.x+1}-${cell.y+1}.`;
-    }else if(match.result==='draw'){
-      match.chronicle=`Empate. El sector ${cell.x+1}-${cell.y+1} sigue en manos de ${defender.name}.`;
-    }else{
-      match.chronicle=`${defender.name} gana y conserva el sector ${cell.x+1}-${cell.y+1}.`;
-    }
-    state.matches.push(match);
-    addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match');
-    if(show)showMatch(match);
+    if(match.result==='home')match.chronicle=`${attacker.name} gana y toma el sector ${cell.x+1}-${cell.y+1}.`;
+    else if(match.result==='draw')match.chronicle=`Empate. El sector ${cell.x+1}-${cell.y+1} sigue en manos de ${defender.name}.`;
+    else match.chronicle=`${defender.name} gana y conserva el sector ${cell.x+1}-${cell.y+1}.`;
+
+    const finalize=()=>{
+      if(!commitMatchStats(match))return false;
+      const liveCell=state.map[idx(target.x,target.y)];
+      if(match.result==='home'&&liveCell&&liveCell.owner===target.owner)liveCell.owner=attacker.id;
+      addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match');
+      save();render();return true;
+    };
+    if(show)showMatch(match,finalize);else finalize();
     return match;
   }
 
@@ -701,7 +752,8 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     if(e.type==='block')return `Remate de ${e.playerName} · bloqueado por ${e.defenderName}`;
     return `Remate de ${e.playerName} · afuera`;
   }
-  function showMatch(match){
+  function showMatch(match,onFinal=null){
+    const dialog=$('#matchDialog');dialog.dataset.playing='1';
     const token=++matchPlaybackToken,home=state.teams.find(t=>t.id===match.homeId),away=state.teams.find(t=>t.id===match.awayId),c=$('#matchContent');c.innerHTML='';
     const head=el('div','dialog-heading'),tx=el('div');tx.append(el('span','panel-kicker','PARTIDO EN VIVO'),el('h2','',`Sector ${match.front.x+1}-${match.front.y+1}`));head.append(tx);c.appendChild(head);
     const minute=el('div','match-minute',"0'"),goalBanner=el('div','goal-banner hidden','GOL');
@@ -712,13 +764,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     c.appendChild(liveStats);
     const timeline=el('div','match-timeline live-timeline');timeline.appendChild(el('strong','match-section-title','Minuto a minuto'));c.appendChild(timeline);
     const finalBox=el('div','match-final hidden');c.appendChild(finalBox);
-    $('#matchDialog').showModal();
+    dialog.showModal();
 
     (async()=>{
       let homeGoals=0,awayGoals=0,eventIndex=0;
       const live=[{shots:0,onTarget:0,xg:0},{shots:0,onTarget:0,xg:0}];
       for(let m=1;m<=90;m++){
-        if(token!==matchPlaybackToken||!$('#matchDialog').open)return;
+        if(token!==matchPlaybackToken||!dialog.open)return;
         minute.textContent=`${m}'`;
         while(eventIndex<(match.events?.length||0)&&match.events[eventIndex].minute<=m){
           const e=match.events[eventIndex++],side=e.teamId===match.homeId?0:1,team=side===0?home:away;
@@ -729,15 +781,17 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
             if(side===0)homeGoals++;else awayGoals++;score.textContent=`${homeGoals} - ${awayGoals}`;
             score.classList.remove('goal-flash');void score.offsetWidth;score.classList.add('goal-flash');
             goalBanner.textContent=`GOL · ${e.playerName}`;goalBanner.classList.remove('hidden');goalBanner.classList.remove('goal-flash');void goalBanner.offsetWidth;goalBanner.classList.add('goal-flash');
-            await sleep(900);
+            await sleep(GOAL_PAUSE_MS);
             if(token!==matchPlaybackToken)return;
             goalBanner.classList.add('hidden');
           }
         }
-        await sleep(75);
+        await sleep(MATCH_MINUTE_MS);
       }
-      if(token!==matchPlaybackToken||!$('#matchDialog').open)return;
+      if(token!==matchPlaybackToken||!dialog.open)return;
       minute.textContent='FINAL';score.textContent=`${match.homeGoals} - ${match.awayGoals}`;
+      if(typeof onFinal==='function')onFinal();
+      dialog.dataset.playing='0';
       if(match.stats){
         $('#liveShotsHome').textContent=match.stats[0].shots;$('#liveShotsAway').textContent=match.stats[1].shots;$('#liveTargetHome').textContent=match.stats[0].onTarget;$('#liveTargetAway').textContent=match.stats[1].onTarget;$('#liveXgHome').textContent=match.stats[0].xg.toFixed(1);$('#liveXgAway').textContent=match.stats[1].xg.toFixed(1);
         const possession=el('div','match-stat');possession.append(el('b','',`${match.stats[0].possession}%`),el('span','','Posesión'),el('b','',`${match.stats[1].possession}%`));liveStats.insertBefore(possession,liveStats.children[1]);
@@ -843,7 +897,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     $('#versionLabel').textContent=`v${VERSION}`; updateContinue(); checkLatestVersion();
     $('#updateButton').addEventListener('click',installUpdate);
     $('#bestXIButton').addEventListener('click',autoBestXI);
-    $('#matchDialog').addEventListener('close',()=>{matchPlaybackToken++;});
+    const matchDialog=$('#matchDialog');
+    matchDialog.addEventListener('cancel',e=>{if(matchDialog.dataset.playing==='1')e.preventDefault();});
+    matchDialog.addEventListener('close',()=>{matchDialog.dataset.playing='0';matchPlaybackToken++;});
     $('#startSetupButton').addEventListener('click',()=>$('#setupDialog').showModal());
     $('#continueButton').addEventListener('click',()=>{state=load();if(state)showGame();});
     $('#newGameButton').addEventListener('click',()=>$('#setupDialog').showModal());
