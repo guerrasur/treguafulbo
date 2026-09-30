@@ -205,6 +205,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   <dialog id="helpDialog" class="game-dialog">
     <div class="dialog-heading"><div><span class="panel-kicker">CÓMO SE JUEGA</span><h2>Reglas básicas</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
     <ol class="help-steps">
+      <li><b>Objetivo.</b> La partida termina cuando tu equipo se queda sin territorio o cuando queda un solo equipo con casillas en el mapa.</li>
       <li><b>Expandir.</b> Hay 3 acciones por turno. Mientras haya espacio accesible, se ocupan casillas libres adyacentes. Si tu equipo queda sin expansión libre —o el mapa está completo—, las casillas rivales de frontera se pueden disputar.</li>
       <li><b>Plantel.</b> Fichar y abrir paquetes consume 1 acción. Reorganizar titulares sigue siendo gratis.</li>
       <li><b>Stats.</b> Cada jugador tiene ATQ, PAS, DEF y ARQ. La posición natural y el puesto ocupado en el once afectan su aporte.</li>
@@ -416,6 +417,12 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     const card=$('#frontStatusCard');if(!card)return;
     const fill=$('#frontMeterFill'),title=$('#frontStatusTitle'),text=$('#frontStatusText'),human=humanTeam();
     card.classList.remove('hot');
+    if(state.finished){
+      title.textContent='Partida terminada';fill.style.width='100%';
+      const winner=state.winnerId?state.teams.find(t=>t.id===state.winnerId):null;
+      text.textContent=winner?winner.name+' controla el territorio final.':'Tu equipo quedó sin territorio.';
+      return;
+    }
     if(frontierPhase(human)){
       const disputes=disputableFrontier(human);
       const rivals=[...new Set(disputes.map(c=>c.owner))].map(id=>state.teams.find(t=>t.id===id)).filter(Boolean);
