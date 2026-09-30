@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#153b55" />
   <title>Treguafulbo</title>
   <meta name="description" content="Demo offline de Treguafulbo: fútbol y territorio." />
-  <link rel="stylesheet" href="styles.css?v=0.6.0" />
+  <link rel="stylesheet" href="styles.css?v=0.6.1" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.6.0</small>
+        <small id="versionLabel">v0.6.1</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,7 +35,7 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.6.0</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.6.1</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -45,61 +45,71 @@
       </section>
 
       <section id="gameScreen" class="screen game-screen hidden">
-        <div class="status-strip">
-          <div>
-            <span class="status-kicker">TURNO ACTUAL</span>
-            <strong id="turnTeamName">—</strong>
+        <div class="turn-hud">
+          <div class="turn-team">
+            <div class="crest hud-crest" id="currentCrest"></div>
+            <div class="turn-team-copy">
+              <span class="status-kicker">MI EQUIPO</span>
+              <strong id="currentTeamLabel">—</strong>
+              <div class="team-metrics"><span>AVG <b id="teamAvg">—</b></span><span>Territorio <b id="territoryCount">—</b></span></div>
+              <span id="turnTeamName" class="sr-only">—</span>
+            </div>
           </div>
-          <div class="action-pips" id="actionPips" aria-label="Acciones restantes"></div>
+          <div class="turn-actions-left">
+            <span class="status-kicker">ACCIONES</span>
+            <div class="action-pips" id="actionPips" aria-label="Acciones restantes"></div>
+          </div>
           <button id="endTurnButton" class="end-turn-button">Terminar turno</button>
         </div>
 
         <section class="season-strip panel-card compact" id="seasonStrip"></section>
+
         <div class="game-layout">
           <section class="map-panel panel-card">
-            <div class="panel-heading">
+            <div class="panel-heading map-heading">
               <div><span class="panel-kicker">MAPA TÁCTICO</span><h2 id="roundLabel">Ronda 1</h2></div>
               <div class="legend" id="legend"></div>
             </div>
-            <div id="map" class="map-grid" role="grid" aria-label="Mapa de Treguafulbo"></div>
-            <div class="map-hint" id="mapHint">Seleccioná una casilla libre marcada.</div>
-          </section>
 
-          <aside class="side-panel">
-            <section class="panel-card compact current-team-card">
-              <div class="crest" id="currentCrest"></div>
-              <div>
-                <span class="panel-kicker">MI EQUIPO</span>
-                <h2 id="currentTeamLabel">—</h2>
-                <div class="team-metrics"><span>AVG <strong id="teamAvg">—</strong></span><span>Territorio <strong id="territoryCount">—</strong></span></div>
+            <div class="map-workspace">
+              <div class="map-stage">
+                <div id="map" class="map-grid" role="grid" aria-label="Mapa de Treguafulbo"></div>
+                <div class="map-hint" id="mapHint">Expandir activo · tocá una casilla libre marcada.</div>
               </div>
-            </section>
 
-            <section class="panel-card compact team-overview-card">
-              <span class="panel-kicker">AVG DE EQUIPOS</span>
-              <div id="teamAvgOverview" class="team-overview-list"></div>
-            </section>
+              <aside class="map-rail">
+                <section id="frontStatusCard" class="front-status-card map-front-strip">
+                  <div class="front-title-row"><span class="panel-kicker">FRENTE</span><strong id="frontStatusTitle">Sin partido próximo</strong></div>
+                  <div class="front-meter"><i id="frontMeterFill"></i></div>
+                  <small id="frontStatusText">Expandí hacia otro equipo para formar un frente.</small>
+                </section>
 
-            <section id="frontStatusCard" class="panel-card compact front-status-card">
-              <span class="panel-kicker">FRENTE</span>
-              <strong id="frontStatusTitle">Sin partido próximo</strong>
-              <div class="front-meter"><i id="frontMeterFill"></i></div>
-              <small id="frontStatusText">Expandí hacia otro equipo para formar un frente.</small>
-            </section>
+                <section class="map-actions" aria-label="Acciones del turno">
+                  <div class="map-action-title"><span>⚑</span><strong>Expandir activo</strong><small>El mapa ocupa o disputa al tocar una casilla válida.</small></div>
+                  <div class="action-grid">
+                    <button class="action-button" data-action="market"><span>🛒</span><div><strong>Fichar</strong><small>1 acción</small></div></button>
+                    <button class="action-button" data-action="pack"><span>📦</span><div><strong>Paquete</strong><small>1 acción</small></div></button>
+                    <button class="action-button" data-action="squad"><span>👥</span><div><strong>Plantel</strong><small>Gratis</small></div></button>
+                  </div>
+                </section>
 
-            <section class="panel-card compact actions-card">
-              <span class="panel-kicker">ACCIONES</span>
-              <button class="action-button selected" data-action="expand"><span>⚑</span><div><strong>Expandir</strong><small>1 acción</small></div></button>
-              <button class="action-button" data-action="market"><span>🛒</span><div><strong>Fichar</strong><small>1 acción · sin precio</small></div></button>
-              <button class="action-button" data-action="pack"><span>📦</span><div><strong>Abrir paquete</strong><small>1 acción</small></div></button>
-              <button class="action-button" data-action="squad"><span>👥</span><div><strong>Plantel</strong><small>gratis</small></div></button>
-            </section>
+                <div class="map-secondary">
+                  <details class="secondary-panel team-overview-card">
+                    <summary><span>Equipos</span><small>AVG</small></summary>
+                    <div id="teamAvgOverview" class="team-overview-list"></div>
+                  </details>
 
-            <section class="panel-card compact feed-card">
-              <div class="panel-heading mini"><span class="panel-kicker">EVENTOS</span><button id="clearFeedButton" class="text-button">Limpiar</button></div>
-              <div id="eventFeed" class="event-feed"></div>
-            </section>
-          </aside>
+                  <details class="secondary-panel feed-card">
+                    <summary><span>Eventos</span><small>Últimos movimientos</small></summary>
+                    <div class="secondary-panel-body">
+                      <div class="panel-heading mini"><span class="panel-kicker">EVENTOS</span><button id="clearFeedButton" class="text-button">Limpiar</button></div>
+                      <div id="eventFeed" class="event-feed"></div>
+                    </div>
+                  </details>
+                </div>
+              </aside>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -204,6 +214,6 @@
     <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
   </dialog>
 
-  <script src="game.js?v=0.6.0" defer></script>
+  <script src="game.js?v=0.6.1" defer></script>
 </body>
 </html>
