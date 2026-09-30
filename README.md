@@ -1,6 +1,18 @@
-# Trucebol
+# Treguafulbo
 
 Demo offline de fútbol y conquista territorial.
+
+## v0.2.0
+
+- mantiene la demo y el flujo existente de Treguafulbo;
+- partidos 100% simulados, sin controles ni minijuegos dentro del encuentro;
+- atributos individuales ATQ, PAS, DEF y ARQ;
+- la posición natural y el puesto ocupado en el XI afectan el rendimiento;
+- perfil de equipo ATQ / MED / DEF / ARQ;
+- simulación de posesión, remates, tiros al arco, xG y atajadas;
+- goles, asistencias, figura, minuto a minuto y rendimientos individuales;
+- el azar sigue existiendo, pero los stats del XI inclinan la simulación;
+- migración automática del save anterior `trucebol-demo-v1` a `treguafulbo-demo-v1` sin borrar el original.
 
 ## v0.1.0
 
@@ -13,7 +25,7 @@ Demo offline de fútbol y conquista territorial.
 - AVG calculado con titulares;
 - mercado y paquetes;
 - partidos activados por 3 adyacencias;
-- resultado con AVG + azar;
+- resultado simulado según plantel + azar;
 - territorio, tabla y goleadores;
 - guardado local con localStorage;
 - sin temporizador.
@@ -35,7 +47,7 @@ Texto mínimo, neutro, directo y funcional. Evitar jerga, chistes, tono canchero
 
 ## NEXO
 
-Trucebol está pensado para multiplayer asincrónico con amigos y sin presión.
+Treguafulbo está pensado para multiplayer asincrónico con amigos y sin presión.
 
 - no hay reloj obligatorio;
 - cerrar turno es manual;
@@ -47,8 +59,13 @@ Trucebol está pensado para multiplayer asincrónico con amigos y sin presión.
 
 Demo estática sin backend ni build. La primera versión se concentra en `index.html` para facilitar prueba e iteración. GitHub Pages sirve `main`.
 
-Save: `trucebol-demo-v1`.
+Save actual: `treguafulbo-demo-v1`. Se conserva compatibilidad con `trucebol-demo-v1` para migrar partidas previas.
 
 ## Versionado
 
 La versión visible y `version.json` deben actualizarse juntos. Toda update debe revisar mobile, touch, persistencia, turnos, AVG, mapa y partidos.
+
+
+## Dirección de partidos
+
+La parte jugable ocurre antes del partido: armar el XI y mejorar el plantel. El encuentro se simula por completo. La referencia de 7a0 se usa para dar peso al armado del equipo; New Star Soccer se toma sólo como referencia de presentación y protagonismo de los momentos del partido, no de controles interactivos.
