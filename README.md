@@ -1,5 +1,15 @@
 # Treguafulbo
 
+## v0.6.4
+
+El territorio ahora alimenta el scouting del Mercado sin dar puntos ni bonus directos al equipo.
+
+- cada ronda congela una cobertura de scouting según las casillas controladas al comenzar: 3 observados por defecto, 4 desde 6 sectores, 5 desde 10 y 6 desde 15;
+- el Mercado muestra sólo esos jugadores observados durante toda la ronda y no se puede rerollear abriéndolo de nuevo;
+- expandirse durante el turno mejora la cobertura de la ronda siguiente, no la selección actual;
+- fichar sigue costando 1 acción y los paquetes conservan su funcionamiento actual;
+- partidas guardadas anteriores siguen siendo compatibles: el scouting se genera automáticamente al cargarlas.
+
 ## v0.6.1
 
 Actualización de UX sobre el `main` v0.6.0 (`f06dea9`), sin cambiar liga, balance ni simulación de partidos.
