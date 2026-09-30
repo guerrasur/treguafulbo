@@ -698,7 +698,6 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
           const assisted=creator&&Math.random()<.76;
           const event={type:'goal',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,assistId:assisted?creator.p.id:null,assistName:assisted?creator.p.name:null,xg};
           events.push(event);goals.push({teamId:attacking.id,side:side===0?'home':'away',playerId:shooter.p.id,playerName:shooter.p.name,minute});
-          attacking.scorers[shooter.p.id]=(attacking.scorers[shooter.p.id]||0)+1;
         }else{
           stats[other].saves++;
           events.push({type:'save',minute,teamId:attacking.id,playerId:shooter.p.id,playerName:shooter.p.name,defenderTeamId:defending.id,xg});
