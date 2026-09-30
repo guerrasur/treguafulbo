@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.8.0';
+  const VERSION = '0.8.1';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -17,7 +17,8 @@
     ['messi','L. Mesia',91,'DEL'],['mbappe','K. Mbapé',91,'DEL'],['haaland','E. Haland',90,'DEL'],['julian','J. Alvarez',84,'DEL'],['lautaro','L. Martinez',86,'DEL'],['vinicius','V. Junior',89,'DEL'],['salah','M. Salah',88,'DEL'],['griezmann','A. Griezman',86,'DEL'],['son','H. Son',87,'DEL']
   ].map(([id,name,rating,pos]) => ({id,name,rating,pos,unique:false,legacy:true}));
   const ARGENTINA_PLAYERS_2026 = Array.isArray(globalThis.TREGUAFULBO_ARG_2026) ? globalThis.TREGUAFULBO_ARG_2026 : [];
-  const PLAYERS = [...ARGENTINA_PLAYERS_2026,...LEGACY_PLAYERS];
+  const PLAYER_INDEX = [...ARGENTINA_PLAYERS_2026,...LEGACY_PLAYERS];
+  const PLAYERS = ARGENTINA_PLAYERS_2026;
 
   const AI_PRESETS = [
     {name:'Rojo FC',colors:['#e85243','#52262a']},
@@ -159,7 +160,7 @@
     all.append(allSummary,allList);fixtures.append(all);
     const obsolete=state.matches.filter(m=>m.countsForLeague===false);if(obsolete.length)fixtures.append(el('div','rules-note',`${obsolete.length} partidos anteriores conservados como amistosos; no cuentan para el calendario actual.`));
   }
-  function rarity(p){return p.rating>=90?{key:'legend',label:'Legendario',symbol:'★★★★'}:p.rating>=87?{key:'epic',label:'Épico',symbol:'★★★'}:p.rating>=83?{key:'rare',label:'Destacado',symbol:'★★'}:{key:'base',label:'Base',symbol:'★'};}
+  function rarity(p){return p.rating>=80?{key:'legend',label:'Legendario',symbol:'★★★★'}:p.rating>=77?{key:'epic',label:'Épico',symbol:'★★★'}:p.rating>=74?{key:'rare',label:'Destacado',symbol:'★★'}:{key:'base',label:'Base',symbol:'★'};}
   function seasonSummary(p){
     const s=p.seasonStats;if(!s)return '';
     const club=p.club?p.club+' · ':'';
@@ -174,7 +175,7 @@
     card.append(top,art,el('strong','card-name',p.name));const season=seasonSummary(p);if(season)card.append(el('small','card-season',season));card.append(el('small','card-rarity',`${rare.symbol} ${rare.label}`),stats);return card;
   }
   function renderCareerHome(){
-    const b=$('#careerHome');if(!b)return;b.textContent=`Nivel ${careerLevel()} · Álbum ${profile.collection.length}/${PLAYERS.length} · ${profile.completed.length} ligas completadas`;
+    const b=$('#careerHome');if(!b)return;const activeIds=new Set(PLAYERS.map(p=>p.id)),discovered=profile.collection.filter(id=>activeIds.has(id)).length;b.textContent=`Nivel ${careerLevel()} · Álbum ${discovered}/${PLAYERS.length} · ${profile.completed.length} ligas completadas`;
   }
   function albumCard(p,discovered){
     const rare=rarity(p),card=el('article',`album-player-card rarity-${rare.key}${discovered?'':' locked'}`),head=el('div','album-card-head');
@@ -190,7 +191,7 @@
     return card;
   }
   function renderAlbum(){
-    const discovered=new Set(profile.collection),position=$('#albumPositionFilter')?.value||'all',rareFilter=$('#albumRarityFilter')?.value||'all';
+    const activeIds=new Set(PLAYERS.map(p=>p.id)),discovered=new Set(profile.collection.filter(id=>activeIds.has(id))),position=$('#albumPositionFilter')?.value||'all',rareFilter=$('#albumRarityFilter')?.value||'all';
     const stats=$('#careerStats');stats.innerHTML='';
     [['NIVEL',careerLevel()],['XP',profile.xp],['ÁLBUM',`${discovered.size}/${PLAYERS.length}`],['LIGAS',profile.completed.length]].forEach(([label,value])=>{const box=el('div','album-stat');box.append(el('span','',label),el('b','',value));stats.append(box);});
     const cabinet=$('#trophyCabinet');cabinet.innerHTML='';profile.completed.slice(-8).reverse().forEach(s=>{const tile=el('div','trophy-tile');tile.append(medalBadge(s.rank),el('strong','',s.name),el('small','',`${s.rank}º · ${s.points} PTS`));cabinet.append(tile);});
@@ -245,7 +246,7 @@
   }
   function currentTeam(){ return state.teams[state.turnIndex]; }
   function humanTeam(){ return state.teams.find(t=>t.human); }
-  function playerById(id){ return PLAYERS.find(p=>p.id===id); }
+  function playerById(id){ return PLAYER_INDEX.find(p=>p.id===id); }
   function lineupRatingAvg(team){ const list=team.starters.map(playerById).filter(Boolean); return Math.round(list.reduce((a,p)=>a+p.rating,0)/Math.max(1,list.length)); }
   function hashStat(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function statJitter(p,key,range=5){return (hashStat(`${p.id}|${p.rating}|${p.pos}|${key}`)%(range*2+1))-range;}
@@ -328,7 +329,7 @@
   function rewardFirstConquest(teamId){state.conquestRewarded=state.conquestRewarded||{};if(state.conquestRewarded[teamId]===state.round)return 0;const team=state.teams.find(t=>t.id===teamId);if(!team)return 0;state.conquestRewarded[teamId]=state.round;team.coins=(Number(team.coins)||0)+CONFIG.conquestReward;addEvent('Primera conquista',`${team.name} · +${CONFIG.conquestReward} monedas.`);return CONFIG.conquestReward;}
   function reinforceableCells(team){return ownedTiles(team.id).filter(c=>!c.reinforced&&neighbors(c).some(n=>n.owner!==team.id));}
   function reinforceTile(team,cell,renderNow=true){if(!team||!cell||state.finished||state.actionsLeft<=0||cell.owner!==team.id||cell.reinforced||!neighbors(cell).some(n=>n.owner!==team.id))return false;cell.reinforced=true;state.actionsLeft--;addEvent('Frontera reforzada','Una casilla propia obtiene bonus defensivo.');activeAction='expand';if(renderNow){sound('tap');toast('Frontera reforzada · 1 movimiento usado');save();render();}return true;}
-  function playerCost(p){return p.rating>=90?16:p.rating>=87?12:p.rating>=83?9:6;}
+  function playerCost(p){return p.rating>=80?16:p.rating>=77?12:p.rating>=74?9:6;}
   function idx(x,y){ return y*CONFIG.gridSize+x; }
   function neighbors(cell){ return [[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>({x:cell.x+dx,y:cell.y+dy})).filter(p=>p.x>=0&&p.y>=0&&p.x<CONFIG.gridSize&&p.y<CONFIG.gridSize).map(p=>state.map[idx(p.x,p.y)]); }
 
@@ -651,7 +652,7 @@
     const team=humanTeam(),p=playerById(id),scouting=ensureScouting(team),cost=p?playerCost(p):Infinity;if(!p||state.finished||!currentTeam().human||team.inventory.includes(id)||!scouting.playerIds.includes(id)||team.coins<cost)return;
     team.inventory.push(id);team.coins-=cost;discoverPlayers([id]);addEvent('Fichaje',`${p.name} · ${p.rating} · ${cost} monedas.`);save();render();showAcquisition([p],'Fichaje confirmado',false);
   }
-  function packWeight(p){return p.rating>=90?1:p.rating>=87?3:p.rating>=83?7:12;}
+  function packWeight(p){return p.rating>=80?1:p.rating>=77?3:p.rating>=74?7:12;}
   function weightedPack(team,count=5){
     const pool=PLAYERS.filter(p=>!team.inventory.includes(p.id)),out=[];
     while(pool.length&&out.length<count){const pick=weightedPick(pool,packWeight);out.push(pick);pool.splice(pool.findIndex(p=>p.id===pick.id),1);}return out;
