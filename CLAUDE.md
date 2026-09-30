@@ -58,6 +58,10 @@ Repo: `guerrasur/treguafulbo`.
 GitHub Pages: rama `main`.
 Demo estática sin build ni Firebase.
 
+## Actualizaciones
+
+Mantener el botón de actualización en la barra superior. Debe consultar `version.json` sin caché, mostrarse sólo si la versión publicada difiere de `VERSION` y recargar con cache-busting sin borrar el save.
+
 ## Updates
 
 Mantener versión visible + `version.json`. Antes de publicar, revisar regresiones visibles, mobile, touch, persistencia, turnos, AVG, mapa y partidos. No romper saves sin migración deliberada.
