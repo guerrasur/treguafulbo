@@ -597,6 +597,11 @@
     rows.sort((a,b)=>b.points-a.points||a.team.id.localeCompare(b.team.id));
     let last=null,rank=0;rows.forEach((r,i)=>{if(r.points!==last){rank=i+1;last=r.points;}r.rank=rank;});return rows;
   }
+  function finalLeagueRanking(){
+    const rows=rankedLeagueTeams();
+    if(state.league?.finished&&state.league.championId){const i=rows.findIndex(r=>r.team.id===state.league.championId);if(i>0){const [champ]=rows.splice(i,1);rows.unshift(champ);}}
+    return rows.map((r,i)=>({...r,position:i+1}));
+  }
   function tournamentTopCandidates(){
     const max=Math.max(...state.teams.map(t=>t.points));const order=rankTeamsFor(state).map(t=>t.id);
     return state.teams.filter(t=>t.points===max).sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
@@ -689,14 +694,14 @@
     if(!state.tournament.awarded&&state.finishReason!=='tournament-tiebreak')awardTournamentToLeague(state.winnerId||rankedTeams()[0].id);
     const dialog=$('#gameOverDialog');if(dialog.open)return;
     const leagueDone=!!state.league.finished,ranking=uniqueTournamentRanking(state.tournament.championId||state.winnerId),human=humanTeam(),humanPlace=state.tournament.placements.find(x=>x.teamId===human.id)?.position||ranking.find(x=>x.id===human.id)?.position||1;
-    const leagueRows=rankedLeagueTeams(),leagueHuman=leagueRows.find(r=>r.team.id===human.id),wonLeague=leagueDone&&state.league.championId===human.id;
+    const leagueRows=leagueDone?finalLeagueRanking():rankedLeagueTeams(),leagueHuman=leagueRows.find(r=>r.team.id===human.id),wonLeague=leagueDone&&state.league.championId===human.id;
     $('#gameOverTitle').textContent=leagueDone?(wonLeague?'Liga ganada':`${state.league.name} finalizada`):`${state.tournament.name} finalizado`;
     dialog.classList.toggle('champion',leagueDone?wonLeague:humanPlace===1);dialog.classList.toggle('runner-up',leagueDone?!wonLeague:humanPlace!==1);
-    const podium=$('#podium');podium.innerHTML='';podium.dataset.count=String(Math.min(ranking.length,3));
-    ranking.slice(0,3).forEach(t=>{const card=el('div',`podium-place place-${Math.min(t.position,3)}`),cr=el('div','crest');setCrest(cr,t);card.append(medalBadge(t.position),el('b','',`${t.position}º`),cr,el('strong','',t.name),el('small','',`${t.points} PTS · +${leaguePlacementPoints(t.position)} Liga`));podium.appendChild(card);});
+    const podium=$('#podium');podium.innerHTML='';const podiumRows=leagueDone?leagueRows:ranking;podium.dataset.count=String(Math.min(podiumRows.length,3));
+    podiumRows.slice(0,3).forEach(row=>{const team=leagueDone?row.team:row,position=leagueDone?row.position:row.position,points=leagueDone?row.points:row.points,card=el('div',`podium-place place-${Math.min(position,3)}`),cr=el('div','crest');setCrest(cr,team);card.append(medalBadge(position),el('b','',`${position}º`),cr,el('strong','',team.name),el('small','',leagueDone?`${points} PTS DE LIGA`:`${points} PTS · +${leaguePlacementPoints(position)} Liga`));podium.appendChild(card);});
     $('#gameOverText').textContent=leagueDone?`${state.league.name} · edición ${state.league.edition||1}. ${state.teams.find(t=>t.id===state.league.championId)?.name||'Campeón'} gana la Liga con ${rankedLeagueTeams()[0]?.points||0} puntos de Liga.`:`${human.name}: ${humanPlace}º en el Torneo · +${leaguePlacementPoints(humanPlace)} puntos de Liga. Tabla general: ${leagueHuman?.points||0} puntos.`;
     const awards=$('#seasonAwards');awards.innerHTML='';
-    const leagueTable=el('div','league-result-table');leagueRows.forEach(r=>{const row=el('div',`league-result-row${r.team.id===human.id?' human':''}`);row.append(el('b','',`${r.rank}º`),el('span','',r.team.name),el('strong','',`${r.points} pts`));leagueTable.append(row);});awards.append(leagueTable);
+    const leagueTable=el('div','league-result-table');leagueRows.forEach(r=>{const place=leagueDone?r.position:r.rank,row=el('div',`league-result-row${r.team.id===human.id?' human':''}`);row.append(el('b','',`${place}º`),el('span','',`${r.team.id===state.league.championId?'🏆 ':''}${r.team.name}`),el('strong','',`${r.points} pts`));leagueTable.append(row);});awards.append(leagueTable);
     if(leagueDone){const champ=state.teams.find(t=>t.id===state.league.championId),badge=el('div','notice-card league-title-award');badge.append(el('strong','',`🏆 ${champ?.name||'Campeón'}`),el('span','',`Trofeo de ${state.league.name} · premio estético, sin bonus competitivo.`));awards.append(badge);}
     else awards.append(el('div','rules-note',`Torneo ${state.tournament.number}/${state.league.maxTournaments}. El próximo reinicia mapa, monedas y planteles.`));
     const primary=$('#gameOverNewButton'),fresh=$('#gameOverFreshButton');
@@ -1309,7 +1314,7 @@
 
   function renderStandings(){
     if(!state)return;
-    const leagueWrap=$('#leagueOverallStandings');if(leagueWrap){leagueWrap.innerHTML='';const lt=el('table','standings-table'),lh=el('tr');['#','Equipo','Ganados','Pts Liga'].forEach(x=>lh.append(el('th','',x)));lt.append(lh);rankedLeagueTeams().forEach(r=>{const tr=el('tr',r.team.human?'human-standing':'');const teamCell=el('td'),dot=el('i','team-dot');dot.style.background=pattern(r.team);teamCell.append(dot,document.createTextNode(r.team.name));[r.rank,teamCell,(state.league.history||[]).filter(h=>h.championId===r.team.id).length,r.points].forEach((v,i)=>{if(i===1)tr.append(v);else tr.append(el('td','',String(v)));});lt.append(tr);});leagueWrap.append(lt);}
+    const leagueWrap=$('#leagueOverallStandings');if(leagueWrap){leagueWrap.innerHTML='';const lt=el('table','standings-table'),lh=el('tr');['#','Equipo','Ganados','Pts Liga'].forEach(x=>lh.append(el('th','',x)));lt.append(lh);rankedLeagueTeams().forEach(r=>{const tr=el('tr',r.team.human?'human-standing':'');const teamCell=el('td'),dot=el('i','team-dot');dot.style.background=pattern(r.team);teamCell.append(dot,document.createTextNode(`${state.league.finished&&state.league.championId===r.team.id?'🏆 ':''}${r.team.name}`));[r.rank,teamCell,(state.league.history||[]).filter(h=>h.championId===r.team.id).length,r.points].forEach((v,i)=>{if(i===1)tr.append(v);else tr.append(el('td','',String(v)));});lt.append(tr);});leagueWrap.append(lt);}
     const sorted=rankedTeams(),wrap=$('#standings');wrap.innerHTML='';const t=el('table','standings-table'),h=el('tr');['#','Equipo','AVG','PJ','DG','PTS'].forEach(x=>h.appendChild(el('th','',x)));t.appendChild(h);sorted.forEach(tm=>{const r=el('tr',tm.human?'human-standing':'');const teamCell=el('td'),dot=el('i','team-dot');dot.style.background=pattern(tm);teamCell.append(dot,document.createTextNode(tm.name));[tm.rank,teamCell,teamAvg(tm),`${tm.played}/6`,tm.gf-tm.ga,tm.points].forEach((v,j)=>{if(j===1)r.appendChild(v);else r.appendChild(el('td','',String(v)));});t.appendChild(r);});wrap.appendChild(t);
     const scoreMap=[];state.teams.forEach(tm=>Object.entries(tm.scorers).forEach(([pid,g])=>scoreMap.push({team:tm,player:playerById(pid),goals:g})));scoreMap.sort((a,b)=>b.goals-a.goals);const sc=$('#scorers');sc.innerHTML='';const st=el('table','standings-table'),hh=el('tr');['#','Jugador','Equipo','G'].forEach(x=>hh.appendChild(el('th','',x)));st.appendChild(hh);scoreMap.slice(0,10).forEach((x,i)=>{const r=el('tr');[i+1,x.player?.name||x.playerId,x.team.name,x.goals].forEach(v=>r.appendChild(el('td','',String(v))));st.appendChild(r);});if(!scoreMap.length)sc.textContent='Sin goles.';else sc.appendChild(st);
     const title=$('#leagueScreenName');if(title)title.textContent=`${state.league.name} · Torneo ${state.tournament.number}/${state.league.maxTournaments}`;
