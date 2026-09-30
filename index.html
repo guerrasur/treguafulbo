@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#153b55" />
   <title>Treguafulbo</title>
   <meta name="description" content="Demo offline de Treguafulbo: fútbol y territorio." />
-  <link rel="stylesheet" href="styles.css?v=0.8.4" />
+  <link rel="stylesheet" href="styles.css?v=0.9.0" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.8.4</small>
+        <small id="versionLabel">v0.9.0</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,9 +35,9 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.8.4</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.9.0</span>
             <h1>Mapa, plantel y partidos.</h1>
-            <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
+            <p>Expandí el mapa, armá tu equipo y competí en una Liga de hasta 5 Torneos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
             <button id="continueButton" class="secondary-button large hidden">Continuar partida</button>
           </div>
@@ -127,7 +127,7 @@
           <div class="squad-hero-copy">
             <span class="panel-kicker">MI EQUIPO</span>
             <h3 id="squadHeroName">—</h3>
-            <div class="squad-overall"><span>AVG GENERAL</span><strong id="squadHeroAvg">—</strong></div>
+            <div class="squad-overall"><span>AVG GENERAL</span><strong id="squadHeroAvg">—</strong></div><div id="clubPrestigeBadge" class="club-prestige-badge">Sin títulos de Liga</div>
           </div>
           <div class="squad-season">
             <div><span>POS</span><b id="squadPosition">—</b></div>
@@ -139,6 +139,7 @@
         <div id="teamProfile" class="team-profile"></div>
 
         <div class="squad-tools"><label>Filtrar banco <select id="positionFilter"><option value="all">Todos</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label><button id="albumButton" class="secondary-button">Álbum y premios</button><span id="collectionCount"></span></div>
+        <div id="autoXIChanges" class="notice-card auto-xi-changes hidden" aria-live="polite"></div>
         <div class="squad-grid">
           <section class="panel-card roster-panel starters-panel"><div class="panel-heading mini roster-heading"><div><span class="panel-kicker">XI TITULAR</span><h3>Titulares</h3></div><button id="bestXIButton" class="secondary-button auto-xi-button">Asignar automáticamente</button></div><div id="startersList" class="player-list"></div></section>
           <section class="panel-card roster-panel bench-panel"><div class="panel-heading mini roster-heading"><div><span class="panel-kicker">RESERVA</span><h3>Banco</h3></div></div><div id="benchList" class="player-list"></div></section>
@@ -157,10 +158,12 @@
       </section>
 
       <section id="leagueScreen" class="screen sub-screen hidden">
-        <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">LIGA</span><h2>Tabla y partidos</h2></div></div>
-        <section class="panel-card league-standings-card"><div class="panel-heading mini"><div><span class="panel-kicker">CLASIFICACIÓN</span><h3>Posiciones</h3></div></div><div id="standings"></div></section>
-        <div class="league-rules-note">6 partidos por equipo · Victoria 3 puntos · Empate 1 · Derrota 0</div>
-        <div class="league-secondary-grid"><section class="panel-card scorers-card"><div class="panel-heading mini"><div><span class="panel-kicker">GOLEADORES</span><h3>Máximos goleadores</h3></div></div><div id="scorers"></div></section><div id="fixtureList" class="fixture-list panel-card"></div></div>
+        <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">LIGA</span><h2 id="leagueScreenName">Liga</h2></div></div>
+        <section class="panel-card league-standings-card overall-league-card"><div class="panel-heading mini"><div><span class="panel-kicker">TABLA DE LIGA</span><h3>Puntos acumulados</h3></div></div><div id="leagueOverallStandings"></div></section>
+        <div class="league-rules-note">Hasta 5 Torneos · 1.º +5 · 2.º +3 · 3.º +2 · 4.º +1 · si el líder ya no puede ser alcanzado, la Liga termina antes</div>
+        <section class="panel-card league-standings-card"><div class="panel-heading mini"><div><span class="panel-kicker">TORNEO ACTUAL</span><h3 id="tournamentStandingsTitle">Posiciones</h3></div></div><div id="standings"></div></section>
+        <div class="league-rules-note">Cada Torneo: 6 partidos por equipo · Victoria 3 puntos · Empate 1 · Derrota 0 · empate por el primer puesto: partido de desempate y penales si hace falta</div>
+        <div class="league-secondary-grid"><section class="panel-card scorers-card"><div class="panel-heading mini"><div><span class="panel-kicker">GOLEADORES DEL TORNEO</span><h3>Máximos goleadores</h3></div></div><div id="scorers"></div></section><div id="fixtureList" class="fixture-list panel-card"></div></div>
       </section>
     <section id="albumScreen" class="screen sub-screen hidden">
       <div class="sub-header album-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PROGRESO PERSONAL</span><h2>Álbum</h2></div></div>
@@ -184,31 +187,31 @@
 
   <dialog id="setupDialog" class="game-dialog setup-dialog">
     <form method="dialog" id="setupForm">
-      <div class="dialog-heading"><div><span class="panel-kicker">NUEVA PARTIDA</span><h2>Crear equipo</h2></div><button type="button" class="dialog-close" data-close-dialog>×</button></div>
+      <div class="dialog-heading"><div><span class="panel-kicker">NUEVA LIGA</span><h2>Crear equipo</h2></div><button type="button" class="dialog-close" data-close-dialog>×</button></div>
       <label>Nombre del equipo<input id="teamNameInput" maxlength="22" value="Equipo 1" required /></label>
       <div class="field-row"><label>Color 1<input id="color1Input" type="color" value="#2e9b58" /></label><label>Color 2<input id="color2Input" type="color" value="#f4f0d7" /></label></div>
       <label>Equipos en la partida<select id="teamCountInput"><option value="2">2 equipos</option><option value="3" selected>3 equipos</option><option value="4">4 equipos</option></select></label>
       <div class="crest-preview"><span>Vista previa</span><div id="crestPreview" class="crest big"></div></div>
-      <p class="dialog-note">Se controla un equipo. Los demás se simulan al terminar el turno.</p>
-      <button value="default" class="primary-button large" type="submit">Empezar</button>
+      <p class="dialog-note">La Liga dura hasta 5 Torneos. Cada Torneo genera un mapa nuevo y reinicia monedas y planteles. El nombre y los colores del club se conservan.</p>
+      <button value="default" class="primary-button large" type="submit">Empezar Liga</button>
     </form>
   </dialog>
 
   <dialog id="helpDialog" class="game-dialog">
     <div class="dialog-heading"><div><span class="panel-kicker">CÓMO SE JUEGA</span><h2>Reglas básicas</h2></div><button class="dialog-close" data-close-dialog>×</button></div>
     <ol class="help-steps">
-      <li><b>Objetivo.</b> Terminar primero en la liga. Cada equipo completa exactamente 6 partidos.</li>
-      <li><b>Movimientos.</b> Tenés 3 por turno. Podés expandirte a una casilla libre, atacar una casilla rival adyacente o reforzar una casilla propia de frontera.</li>
-      <li><b>Monedas.</b> Fichajes y paquetes se pagan con monedas y no gastan movimientos. Empezás con 30.</li>
-      <li><b>Zonas.</b> El mapa se divide en A–H. Cada zona tiene 8 casillas y, mientras la controles completa, genera +3 monedas por ronda. El panel bajo el mapa muestra el progreso de cada una.</li>
-      <li><b>Conquista.</b> La primera casilla rival que conquistás en una ronda entrega +5 monedas. Conquistas posteriores de esa ronda no repiten el premio.</li>
-      <li><b>Dado.</b> Al empezar cada ronda se tira un dado virtual. Sólo modifica un pequeño bonus de monedas; nunca decide partidos.</li>
-      <li><b>Refuerzo.</b> Una casilla reforzada da +4 DEF local cuando es atacada. El refuerzo desaparece si la casilla cambia de dueño.</li>
-      <li><b>Plantel.</b> El Mercado muestra 3–6 jugadores observados según tu territorio. Reorganizar titulares es gratis.</li>
-      <li><b>Partido.</b> Los ataques y cruces territoriales se resuelven con un partido 100% simulado según el XI y sus stats.</li>
-      <li><b>Liga.</b> Victoria 3 puntos, empate 1. Los cruces territoriales cuentan para el calendario de 6 partidos.</li>
-      <li><b>Final.</b> Gana el primero de la tabla. El territorio mejora tu economía, pero no suma puntos de liga.</li>
-    </ol><div class="rules-note">Sin reloj. El turno termina manualmente. Los 3 movimientos se reservan para el mapa; administrar plantel, fichar y abrir paquetes no consume movimientos.</div>
+      <li><b>Escala.</b> Los partidos forman un Torneo. Hasta 5 Torneos forman una Liga.</li>
+      <li><b>Torneo.</b> Cada equipo juega 6 partidos. Victoria 3 puntos, empate 1 y derrota 0.</li>
+      <li><b>Desempate.</b> Si el primer puesto del Torneo queda igualado en puntos, se juega un partido extra. Si empata, se define por penales.</li>
+      <li><b>Liga.</b> Cada Torneo entrega puntos de Liga: 1.º +5, 2.º +3, 3.º +2 y 4.º +1. Si el líder ya no puede ser alcanzado, la Liga termina antes.</li>
+      <li><b>Nuevo Torneo.</b> Se reinician mapa, monedas y jugadores. El club, sus colores y el prestigio se conservan.</li>
+      <li><b>Mapa procedural.</b> Cada Torneo genera una silueta distinta del tablero manteniendo conectividad y zonas jugables.</li>
+      <li><b>Movimientos.</b> Tenés 3 por turno. Podés expandirte, atacar una casilla rival adyacente o reforzar una frontera.</li>
+      <li><b>Monedas.</b> Fichajes y paquetes no gastan movimientos. Empezás cada Torneo con 30.</li>
+      <li><b>Zonas.</b> A–H generan +3 monedas por ronda cuando controlás todas sus casillas activas.</li>
+      <li><b>Partidos territoriales.</b> El invasor figura como Visitante y el defensor como Local; es sólo visual y no altera estadísticas.</li>
+      <li><b>Campeón de Liga.</b> Recibe un trofeo/badge estético y suma una Liga ganada. No obtiene ventaja competitiva.</li>
+    </ol><div class="rules-note">Sin reloj. El turno termina manualmente. Administrar plantel, fichar, abrir paquetes y usar “Asignar automáticamente” no consume movimientos.</div>
   </dialog>
 
   <dialog id="matchDialog" class="game-dialog match-dialog">
@@ -235,13 +238,32 @@
   </dialog>
 
   <dialog id="gameOverDialog" class="game-dialog">
-    <div class="dialog-heading"><div><span class="panel-kicker">FIN DE PARTIDA</span><h2 id="gameOverTitle">Partida terminada</h2></div></div>
+    <div class="dialog-heading"><div><span class="panel-kicker">RESULTADO</span><h2 id="gameOverTitle">Torneo terminado</h2></div></div>
     <div id="podium" class="podium"></div><div id="gameOverText" class="chronicle"></div><div id="seasonAwards"></div>
     <button class="secondary-button large" data-close-dialog>Ver mapa</button>
-    <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
+    <button id="gameOverNewButton" class="primary-button large">Siguiente torneo</button>
+    <button id="gameOverFreshButton" class="secondary-button large hidden">Nueva Liga</button>
   </dialog>
 
-  <script src="players-argentina-2026.js?v=0.8.4" defer></script>
-  <script src="game.js?v=0.8.4" defer></script>
+  <dialog id="rosterIntroDialog" class="game-dialog roster-intro-dialog">
+    <div class="dialog-heading"><div><span class="panel-kicker">NUEVO TORNEO</span><h2 id="rosterIntroTitle">Plantel inicial</h2></div></div>
+    <div id="rosterIntroMeta" class="dialog-note"></div>
+    <div id="rosterIntroList" class="roster-intro-list"></div>
+    <button id="rosterIntroContinue" class="primary-button large">Continuar</button>
+  </dialog>
+
+  <dialog id="penaltyDialog" class="game-dialog penalty-dialog">
+    <div class="dialog-heading"><div><span class="panel-kicker">PENALES</span><h2 id="penaltyTitle">Desempate</h2></div></div>
+    <div id="penaltyTeams" class="penalty-score">—</div>
+    <p id="penaltyRound" class="dialog-note">Elegí dónde patear y dónde atajar.</p>
+    <div id="penaltyReveal" class="penalty-reveal" aria-live="polite"></div>
+    <div class="penalty-choice-block"><strong>Patear</strong><div class="penalty-choice-grid"><button data-penalty-kick="left">Izquierda</button><button data-penalty-kick="center">Centro</button><button data-penalty-kick="right">Derecha</button></div></div>
+    <div class="penalty-choice-block"><strong>Atajar</strong><div class="penalty-choice-grid"><button data-penalty-dive="left">Izquierda</button><button data-penalty-dive="center">Centro</button><button data-penalty-dive="right">Derecha</button></div></div>
+    <div id="penaltyHistory" class="penalty-history"></div>
+    <button id="penaltyConfirmButton" class="primary-button large" disabled>Confirmar elecciones</button>
+  </dialog>
+
+  <script src="players-argentina-2026.js?v=0.9.0" defer></script>
+  <script src="game.js?v=0.9.0" defer></script>
 </body>
 </html>
