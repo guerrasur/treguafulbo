@@ -31,6 +31,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 .team-profile{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}.team-profile>div{border:2px solid var(--line);border-radius:11px;background:#fff7db;padding:10px;text-align:center;box-shadow:0 3px 0 rgba(13,44,64,.13)}.team-profile span{display:block;font-size:9px;font-weight:1000;letter-spacing:1px}.team-profile b{display:block;font-size:24px;margin-top:2px}.player-stats{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:4px}.player-stats i{font-style:normal;font-size:9px;font-weight:900;color:#557083}.player-row.out-position{background:#fff0dd;border-color:#d67b52}.match-dialog{width:min(94vw,760px)}.match-stats{display:grid;gap:6px;border:2px solid #c7ba8d;border-radius:11px;background:white;padding:10px;margin:12px 0}.match-section-title{display:block;margin-bottom:4px}.match-stat{display:grid;grid-template-columns:70px 1fr 70px;align-items:center;text-align:center;border-top:1px solid #e4dcc0;padding-top:6px;font-size:12px}.match-stat b:first-child{text-align:left}.match-stat b:last-child{text-align:right}.match-star{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--yellow);border:2px solid var(--line);border-radius:11px;padding:10px 12px;margin:12px 0}.match-star strong,.match-star small{display:block}.match-star small{font-size:10px;margin-top:2px}.match-star>b{font-size:30px}.match-timeline,.match-ratings{border:2px solid #c7ba8d;background:white;border-radius:11px;padding:10px;margin:12px 0}.match-event{display:grid;grid-template-columns:42px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid #eee5c9;font-size:12px}.match-event small{font-size:9px;color:#60778a;text-align:right}.match-event.goal span{font-weight:1000}.rating-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #eee5c9;font-size:12px}.rating-row b{font-size:16px}
 @media(max-width:560px){.team-profile{gap:5px}.team-profile>div{padding:8px 4px}.team-profile b{font-size:20px}.player-stats{gap:2px 6px}.player-stats i{font-size:8px}.match-stat{grid-template-columns:55px 1fr 55px}.match-event{grid-template-columns:34px 1fr}.match-event small{grid-column:2;text-align:left}}
 
+
+.front-status-card{display:grid;gap:6px}.front-status-card>strong{font-size:15px}.front-status-card>small{font-size:10px;line-height:1.35}.front-status-card.hot{background:#fff0c9;border-color:#d77b37}.front-meter{height:8px;border:2px solid var(--line);border-radius:999px;background:#fff;overflow:hidden}.front-meter i{display:block;height:100%;width:0;background:var(--green);transition:width .2s}.front-status-card.hot .front-meter i{background:var(--red)}.tile.front-pressure{box-shadow:inset 0 0 0 4px rgba(245,189,54,.45)}.tile.front-pressure:after{content:attr(data-front);position:absolute;right:3px;top:3px;inset:auto 3px auto auto;background:var(--paper-2);border:1px solid var(--line);border-radius:5px;padding:1px 3px;font-size:8px;font-weight:1000;z-index:3}.tile.front-pressure.near-match{box-shadow:inset 0 0 0 5px rgba(234,85,70,.55)}.tile.available.match-trigger{outline-color:var(--yellow);box-shadow:inset 0 0 0 8px rgba(234,85,70,.4);animation:matchPulse .55s infinite alternate}.tile.available.match-trigger:before{content:"⚽";font-size:clamp(17px,3.5vw,29px)}@keyframes matchPulse{to{filter:brightness(1.2);transform:scale(.98)}}.squad-header{align-items:center}.auto-xi-button{margin-left:auto;width:auto;white-space:nowrap;padding:9px 13px}.match-minute{text-align:center;font-weight:1000;font-size:22px;letter-spacing:1px;margin-top:4px}.goal-banner{text-align:center;background:var(--yellow);border:3px solid var(--line);border-radius:12px;padding:11px;font-size:24px;font-weight:1000;margin:10px 0}.live-scoreboard{margin-top:6px}.live-timeline{max-height:230px;overflow:auto;scroll-behavior:smooth}.live-enter{animation:eventIn .18s ease-out}@keyframes eventIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.goal-flash{animation:goalBlink .16s 6 alternate}@keyframes goalBlink{from{background:var(--yellow);color:var(--ink-2)}to{background:var(--red);color:white}}.match-final{animation:eventIn .25s ease-out}
+@media(max-width:560px){.squad-header{flex-wrap:wrap}.auto-xi-button{margin-left:0;width:100%}.front-status-card{order:-1}.goal-banner{font-size:20px}.match-minute{font-size:19px}}
+
 </style>
 </head>
 <body>
@@ -40,7 +44,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.2.1</small>
+        <small id="versionLabel">v0.3.0</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -59,7 +63,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.2.1</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.3.0</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Demo local. Un equipo controlado y rivales simulados.</p>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -98,6 +102,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
               </div>
             </section>
 
+            <section id="frontStatusCard" class="panel-card compact front-status-card">
+              <span class="panel-kicker">FRENTE</span>
+              <strong id="frontStatusTitle">Sin partido próximo</strong>
+              <div class="front-meter"><i id="frontMeterFill"></i></div>
+              <small id="frontStatusText">Expandí hacia otro equipo para formar un frente.</small>
+            </section>
+
             <section class="panel-card compact actions-card">
               <span class="panel-kicker">ACCIONES</span>
               <button class="action-button selected" data-action="expand"><span>⚑</span><div><strong>Expandir</strong><small>1 acción</small></div></button>
@@ -115,7 +126,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
       </section>
 
       <section id="teamScreen" class="screen sub-screen hidden">
-        <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PLANTEL</span><h2 id="teamScreenTitle">Mi equipo</h2></div></div>
+        <div class="sub-header squad-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PLANTEL</span><h2 id="teamScreenTitle">Mi equipo</h2></div><button id="bestXIButton" class="secondary-button auto-xi-button">Mejor XI</button></div>
         <div id="teamProfile" class="team-profile"></div>
         <div class="squad-grid"><section class="panel-card"><h3>Titulares</h3><div id="startersList" class="player-list"></div></section><section class="panel-card"><h3>Banco / inventario</h3><div id="benchList" class="player-list"></div></section></div>
       </section>
@@ -157,7 +168,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
       <li><b>Expandir.</b> Hay 3 acciones por turno. Se pueden ocupar casillas libres adyacentes.</li>
       <li><b>Plantel.</b> Fichar y abrir paquetes consume 1 acción. Reorganizar titulares sigue siendo gratis.</li>
       <li><b>Stats.</b> Cada jugador tiene ATQ, PAS, DEF y ARQ. La posición natural y el puesto ocupado en el once afectan su aporte.</li>
-      <li><b>Partido.</b> Tres casillas propias adyacentes a una casilla rival generan un partido.</li>
+      <li><b>Partido.</b> Tres casillas propias adyacentes a una casilla rival generan un partido. El panel Frente y las casillas ⚽ muestran cuándo falta un solo contacto.</li>
       <li><b>Simulación.</b> El encuentro es 100% automático: no hay controles dentro del partido. El XI define ataque, mediocampo, defensa y arquero; el azar sigue permitiendo resultados inesperados.</li>
       <li><b>Informe.</b> Se guardan posesión, remates, tiros al arco, xG, atajadas, goles, asistencias, figura y minuto a minuto.</li>
       <li><b>Resultado.</b> El marcador modifica territorio y liga. En empate, la zona se divide.</li>
@@ -185,7 +196,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 (() => {
   'use strict';
 
-  const VERSION = '0.2.1';
+  const VERSION = '0.3.0';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -207,6 +218,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   let state = null;
   let activeAction = 'expand';
   let pendingSummary = [];
+  let matchPlaybackToken = 0;
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -321,6 +333,38 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 
   function addEvent(title,text,type='normal'){ state.events.unshift({id:Date.now()+Math.random(),title,text,type}); state.events=state.events.slice(0,30); }
   function availableExpansion(team){ const seen=new Map(); ownedTiles(team.id).forEach(c=>neighbors(c).filter(n=>!n.owner).forEach(n=>seen.set(`${n.x},${n.y}`,n))); return [...seen.values()]; }
+  function pairPlayedThisRound(a,b){return state.matches.some(m=>m.round===state.round&&((m.homeId===a&&m.awayId===b)||(m.homeId===b&&m.awayId===a)));}
+  function frontPressures(teamId){
+    return state.map.filter(cell=>cell.owner&&cell.owner!==teamId).map(cell=>{
+      const ownAdj=neighbors(cell).filter(n=>n.owner===teamId).length;
+      return {cell,defenderId:cell.owner,ownAdj};
+    }).filter(x=>x.ownAdj>0&&!pairPlayedThisRound(teamId,x.defenderId)).sort((a,b)=>b.ownAdj-a.ownAdj);
+  }
+  function matchTriggerCells(teamId){
+    const available=new Set(availableExpansion(state.teams.find(t=>t.id===teamId)).map(c=>`${c.x},${c.y}`)),triggers=new Map();
+    frontPressures(teamId).filter(x=>x.ownAdj===CONFIG.battleThreshold-1).forEach(front=>{
+      neighbors(front.cell).filter(n=>!n.owner&&available.has(`${n.x},${n.y}`)).forEach(n=>triggers.set(`${n.x},${n.y}`,front.defenderId));
+    });
+    return triggers;
+  }
+  function renderFrontStatus(){
+    const card=$('#frontStatusCard');if(!card)return;
+    const best=frontPressures(humanTeam().id)[0],fill=$('#frontMeterFill'),title=$('#frontStatusTitle'),text=$('#frontStatusText');
+    card.classList.remove('hot');
+    if(!best){
+      title.textContent='Sin partido próximo';text.textContent='Expandí hacia otro equipo para formar un frente.';fill.style.width='0%';return;
+    }
+    const rival=state.teams.find(t=>t.id===best.defenderId),value=Math.min(CONFIG.battleThreshold,best.ownAdj);
+    fill.style.width=`${value/CONFIG.battleThreshold*100}%`;
+    if(value===CONFIG.battleThreshold-1){
+      card.classList.add('hot');title.textContent=`Partido próximo · ${value}/${CONFIG.battleThreshold}`;
+      text.textContent=`Contra ${rival.name}. Las casillas ⚽ del mapa disparan el partido.`;
+    }else{
+      title.textContent=`Frente con ${rival.name} · ${value}/${CONFIG.battleThreshold}`;
+      text.textContent=`Faltan ${CONFIG.battleThreshold-value} contactos para generar un partido.`;
+    }
+  }
+
 
   function render(){
     if(!state)return;
@@ -331,7 +375,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     $('#teamAvg').textContent=teamAvg(humanTeam());
     $('#territoryCount').textContent=ownedTiles(humanTeam().id).length;
     setCrest($('#currentCrest'),humanTeam());
-    renderActionPips(); renderLegend(); renderMap(); renderFeed(); renderButtons(); renderSquad(); renderStandings(); renderMarket();
+    renderActionPips(); renderLegend(); renderMap(); renderFrontStatus(); renderFeed(); renderButtons(); renderSquad(); renderStandings(); renderMarket();
     $('#teamScreenTitle').textContent=`${humanTeam().name} · AVG ${teamAvg(humanTeam())}`;
   }
 
@@ -344,22 +388,34 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function frontCells(){
     const fronts=new Set();
     state.map.filter(c=>c.owner).forEach(c=>{
-      const counts={}; neighbors(c).filter(n=>n.owner&&n.owner!==c.owner).forEach(()=>{});
-      state.teams.forEach(t=>{ if(t.id!==c.owner){ const ownAdj=neighbors(c).filter(n=>n.owner===t.id).length; if(ownAdj>=CONFIG.battleThreshold) fronts.add(`${c.x},${c.y}`); } });
+      state.teams.forEach(t=>{if(t.id!==c.owner){const ownAdj=neighbors(c).filter(n=>n.owner===t.id).length;if(ownAdj>=CONFIG.battleThreshold)fronts.add(`${c.x},${c.y}`);}});
     });
     return fronts;
   }
 
   function renderMap(){
     const map=$('#map'); map.innerHTML='';
-    const human=humanTeam(); const available=new Set(availableExpansion(human).map(c=>`${c.x},${c.y}`)); const fronts=frontCells();
+    const human=humanTeam(),available=new Set(availableExpansion(human).map(c=>`${c.x},${c.y}`)),fronts=frontCells(),pressures=frontPressures(human.id),pressureMap=new Map(pressures.map(x=>[`${x.cell.x},${x.cell.y}`,x])),triggers=matchTriggerCells(human.id);
     state.map.forEach(cell=>{
-      const b=el('button','tile'); b.type='button'; b.setAttribute('role','gridcell'); b.dataset.x=cell.x; b.dataset.y=cell.y;
-      if(cell.owner){ const t=state.teams.find(t=>t.id===cell.owner); b.style.background=pattern(t); b.title=t.name; }
-      if(currentTeam().human && activeAction==='expand' && state.actionsLeft>0 && !cell.owner && available.has(`${cell.x},${cell.y}`)) b.classList.add('available');
-      if(fronts.has(`${cell.x},${cell.y}`)) b.classList.add('front');
-      b.addEventListener('click',()=>handleTile(cell)); map.appendChild(b);
+      const key=`${cell.x},${cell.y}`,b=el('button','tile'); b.type='button'; b.setAttribute('role','gridcell'); b.dataset.x=cell.x; b.dataset.y=cell.y;
+      if(cell.owner){const t=state.teams.find(t=>t.id===cell.owner);b.style.background=pattern(t);b.title=t.name;}
+      if(currentTeam().human&&activeAction==='expand'&&state.actionsLeft>0&&!cell.owner&&available.has(key))b.classList.add('available');
+      const pressure=pressureMap.get(key);
+      if(pressure){
+        b.classList.add('front-pressure');b.dataset.front=`${pressure.ownAdj}/${CONFIG.battleThreshold}`;
+        if(pressure.ownAdj===CONFIG.battleThreshold-1)b.classList.add('near-match');
+        const rival=state.teams.find(t=>t.id===pressure.defenderId);b.title=`${rival.name} · frente ${pressure.ownAdj}/${CONFIG.battleThreshold}`;
+      }
+      if(triggers.has(key)){
+        b.classList.add('match-trigger');
+        const rival=state.teams.find(t=>t.id===triggers.get(key));b.title=`Ocupar esta casilla genera partido contra ${rival.name}`;
+      }
+      if(fronts.has(key))b.classList.add('front');
+      b.addEventListener('click',()=>handleTile(cell));map.appendChild(b);
     });
+    const hint=$('#mapHint');
+    if(triggers.size)hint.textContent='⚽ Las casillas marcadas generan un partido al ocuparlas.';
+    else{const best=pressures[0];hint.textContent=best?`Frente más cercano: ${best.ownAdj}/${CONFIG.battleThreshold}. Acercate para generar un partido.`:'Seleccioná una casilla libre marcada.';}
   }
 
   function renderFeed(){ const f=$('#eventFeed'); f.innerHTML=''; state.events.slice(0,8).forEach(ev=>{const d=el('div',`event ${ev.type==='match'?'match':''}`);d.append(el('strong','',ev.title),el('span','',ev.text));f.appendChild(d);}); if(!state.events.length)f.textContent='Sin novedades todavía.'; }
@@ -399,6 +455,24 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     info.appendChild(stats);
     r.append(info,el('div','rating',p.rating));
     const b=el('button','',isStarter?'Al banco':'Hacer titular');b.addEventListener('click',()=>toggleStarter(p.id,isStarter));r.appendChild(b);return r;
+  }
+  function slotStrength(p,slot){
+    const sk=playerSkills(p);
+    if(slot==='ARQ')return sk.keeping*.85+p.rating*.15;
+    if(slot==='DEF')return sk.defense*.72+sk.passing*.13+p.rating*.15;
+    if(slot==='MED')return sk.passing*.52+sk.attack*.18+sk.defense*.15+p.rating*.15;
+    return sk.attack*.7+sk.passing*.15+p.rating*.15;
+  }
+  function autoBestXI(){
+    const team=humanTeam(),remaining=team.inventory.map(playerById).filter(Boolean),picked=[];
+    SLOTS.forEach(slot=>{
+      let candidates=remaining.filter(p=>p.pos===slot);
+      if(!candidates.length)candidates=[...remaining];
+      candidates.sort((a,b)=>slotStrength(b,slot)-slotStrength(a,slot)||b.rating-a.rating);
+      const best=candidates[0];if(!best)return;
+      picked.push(best.id);remaining.splice(remaining.findIndex(p=>p.id===best.id),1);
+    });
+    if(picked.length===11){team.starters=picked;addEvent('Plantel','Mejor XI aplicado por posición.');save();render();}
   }
   function toggleStarter(id,isStarter){
     const team=humanTeam();
@@ -495,40 +569,65 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     }
     const winner=match.result==='home'?a:b, loser=match.result==='home'?b:a; const targets=around.filter(c=>c.owner===loser.id).slice(0,CONFIG.battleTransfer); if(!targets.length){ const fallback=state.map.filter(c=>c.owner===loser.id).sort((x,y)=>Math.abs(x.x-frontCell.x)+Math.abs(x.y-frontCell.y)-Math.abs(y.x-frontCell.x)-Math.abs(y.y-frontCell.y)).slice(0,1);targets.push(...fallback); } targets.forEach(c=>c.owner=winner.id);
   }
+  function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+  function liveEventText(e){
+    if(e.type==='goal')return `Gol de ${e.playerName}${e.assistName?` · asistencia ${e.assistName}`:''}`;
+    if(e.type==='save')return `Remate de ${e.playerName} · atajado`;
+    if(e.type==='block')return `Remate de ${e.playerName} · bloqueado por ${e.defenderName}`;
+    return `Remate de ${e.playerName} · afuera`;
+  }
   function showMatch(match){
-    const home=state.teams.find(t=>t.id===match.homeId),away=state.teams.find(t=>t.id===match.awayId),c=$('#matchContent');c.innerHTML='';
-    const head=el('div','dialog-heading'),tx=el('div');tx.append(el('span','panel-kicker','PARTIDO'),el('h2','',`Sector ${match.front.x+1}-${match.front.y+1}`));head.append(tx);c.appendChild(head);
-    const board=el('div','match-scoreboard');
-    [home,away].forEach((t,i)=>{if(i===1)board.appendChild(el('div','match-score',`${match.homeGoals} - ${match.awayGoals}`));const d=el('div','match-team'),cr=el('div','crest');setCrest(cr,t);d.append(cr,el('strong','',t.name),el('small','',` AVG ${i===0?(match.avgHome??teamAvg(t)):(match.avgAway??teamAvg(t))}`));board.appendChild(d);});
-    c.appendChild(board);
-    if(match.stats){
-      const box=el('div','match-stats'),title=el('strong','match-section-title','Estadísticas');box.appendChild(title);
-      const rows=[['Posesión',match.stats[0].possession,match.stats[1].possession,'%'],['Remates',match.stats[0].shots,match.stats[1].shots,''],['Al arco',match.stats[0].onTarget,match.stats[1].onTarget,''],['xG',match.stats[0].xg,match.stats[1].xg,'']];
-      rows.forEach(([label,left,right,suffix])=>{const row=el('div','match-stat');row.append(el('b','',`${left}${suffix}`),el('span','',label),el('b','',`${right}${suffix}`));box.appendChild(row);});
-      c.appendChild(box);
-    }
-    if(match.star){
-      const star=el('div','match-star');const info=el('div');info.append(el('span','panel-kicker','FIGURA'),el('strong','',match.star.name),el('small','',`${state.teams.find(t=>t.id===match.star.teamId)?.name||''} · ${match.star.pos} · ${match.star.goals} G · ${match.star.assists} A`));star.append(info,el('b','',String(match.star.rating)));c.appendChild(star);
-    }
-    const timeline=el('div','match-timeline');timeline.appendChild(el('strong','match-section-title','Minuto a minuto'));
-    if(match.events?.length){
-      match.events.forEach(e=>{const row=el('div',`match-event ${e.type}`),team=state.teams.find(t=>t.id===e.teamId);let text='';
-        if(e.type==='goal')text=`Gol de ${e.playerName}${e.assistName?` · asistencia ${e.assistName}`:''}`;
-        else if(e.type==='save')text=`Remate de ${e.playerName} · atajado`;
-        else if(e.type==='block')text=`Remate de ${e.playerName} · bloqueado por ${e.defenderName}`;
-        else text=`Remate de ${e.playerName} · afuera`;
-        row.append(el('b','',`${e.minute}'`),el('span','',text),el('small','',`${team?.name||''}${Number.isFinite(e.xg)?` · xG ${e.xg.toFixed(1)}`:''}`));timeline.appendChild(row);
-      });
-    }else if(match.goals?.length){
-      match.goals.forEach(g=>{const row=el('div','match-event goal');row.append(el('b','',`${g.minute}'`),el('span','',`Gol de ${g.playerName}`),el('small','',state.teams.find(t=>t.id===g.teamId)?.name||''));timeline.appendChild(row);});
-    }else timeline.appendChild(el('div','dialog-note','Sin goles registrados.'));
-    c.appendChild(timeline);
-    if(match.playerRatings?.length){
-      const ratings=el('div','match-ratings');ratings.appendChild(el('strong','match-section-title','Rendimientos'));
-      match.playerRatings.slice(0,6).forEach(p=>{const row=el('div','rating-row');row.append(el('span','',`${p.name} · ${state.teams.find(t=>t.id===p.teamId)?.name||''}`),el('b','',String(p.rating)));ratings.appendChild(row);});c.appendChild(ratings);
-    }
-    c.appendChild(el('div','chronicle',match.chronicle));
-    const bt=el('button','primary-button large','Volver al mapa');bt.addEventListener('click',()=>$('#matchDialog').close());c.appendChild(bt);$('#matchDialog').showModal();
+    const token=++matchPlaybackToken,home=state.teams.find(t=>t.id===match.homeId),away=state.teams.find(t=>t.id===match.awayId),c=$('#matchContent');c.innerHTML='';
+    const head=el('div','dialog-heading'),tx=el('div');tx.append(el('span','panel-kicker','PARTIDO EN VIVO'),el('h2','',`Sector ${match.front.x+1}-${match.front.y+1}`));head.append(tx);c.appendChild(head);
+    const minute=el('div','match-minute',"0'"),goalBanner=el('div','goal-banner hidden','GOL');
+    const board=el('div','match-scoreboard live-scoreboard'),homeBox=el('div','match-team'),awayBox=el('div','match-team'),score=el('div','match-score','0 - 0');
+    [[home,homeBox,match.avgHome],[away,awayBox,match.avgAway]].forEach(([team,box,av])=>{const cr=el('div','crest');setCrest(cr,team);box.append(cr,el('strong','',team.name),el('small','',` AVG ${av??teamAvg(team)}`));});
+    board.append(homeBox,score,awayBox);c.append(minute,goalBanner,board);
+    const liveStats=el('div','match-stats live-stats');liveStats.innerHTML='<strong class="match-section-title">En juego</strong><div class="match-stat"><b id="liveShotsHome">0</b><span>Remates</span><b id="liveShotsAway">0</b></div><div class="match-stat"><b id="liveTargetHome">0</b><span>Al arco</span><b id="liveTargetAway">0</b></div><div class="match-stat"><b id="liveXgHome">0.0</b><span>xG</span><b id="liveXgAway">0.0</b></div>';
+    c.appendChild(liveStats);
+    const timeline=el('div','match-timeline live-timeline');timeline.appendChild(el('strong','match-section-title','Minuto a minuto'));c.appendChild(timeline);
+    const finalBox=el('div','match-final hidden');c.appendChild(finalBox);
+    $('#matchDialog').showModal();
+
+    (async()=>{
+      let homeGoals=0,awayGoals=0,eventIndex=0;
+      const live=[{shots:0,onTarget:0,xg:0},{shots:0,onTarget:0,xg:0}];
+      for(let m=1;m<=90;m++){
+        if(token!==matchPlaybackToken||!$('#matchDialog').open)return;
+        minute.textContent=`${m}'`;
+        while(eventIndex<(match.events?.length||0)&&match.events[eventIndex].minute<=m){
+          const e=match.events[eventIndex++],side=e.teamId===match.homeId?0:1,team=side===0?home:away;
+          live[side].shots++;if(e.type==='goal'||e.type==='save')live[side].onTarget++;live[side].xg+=Number(e.xg)||0;
+          const row=el('div',`match-event ${e.type} live-enter`);row.append(el('b','',`${e.minute}'`),el('span','',liveEventText(e)),el('small','',`${team.name}${Number.isFinite(e.xg)?` · xG ${e.xg.toFixed(1)}`:''}`));timeline.appendChild(row);timeline.scrollTop=timeline.scrollHeight;
+          $('#liveShotsHome').textContent=live[0].shots;$('#liveShotsAway').textContent=live[1].shots;$('#liveTargetHome').textContent=live[0].onTarget;$('#liveTargetAway').textContent=live[1].onTarget;$('#liveXgHome').textContent=live[0].xg.toFixed(1);$('#liveXgAway').textContent=live[1].xg.toFixed(1);
+          if(e.type==='goal'){
+            if(side===0)homeGoals++;else awayGoals++;score.textContent=`${homeGoals} - ${awayGoals}`;
+            score.classList.remove('goal-flash');void score.offsetWidth;score.classList.add('goal-flash');
+            goalBanner.textContent=`GOL · ${e.playerName}`;goalBanner.classList.remove('hidden');goalBanner.classList.remove('goal-flash');void goalBanner.offsetWidth;goalBanner.classList.add('goal-flash');
+            await sleep(900);
+            if(token!==matchPlaybackToken)return;
+            goalBanner.classList.add('hidden');
+          }
+        }
+        await sleep(75);
+      }
+      if(token!==matchPlaybackToken||!$('#matchDialog').open)return;
+      minute.textContent='FINAL';score.textContent=`${match.homeGoals} - ${match.awayGoals}`;
+      if(match.stats){
+        $('#liveShotsHome').textContent=match.stats[0].shots;$('#liveShotsAway').textContent=match.stats[1].shots;$('#liveTargetHome').textContent=match.stats[0].onTarget;$('#liveTargetAway').textContent=match.stats[1].onTarget;$('#liveXgHome').textContent=match.stats[0].xg.toFixed(1);$('#liveXgAway').textContent=match.stats[1].xg.toFixed(1);
+        const possession=el('div','match-stat');possession.append(el('b','',`${match.stats[0].possession}%`),el('span','','Posesión'),el('b','',`${match.stats[1].possession}%`));liveStats.insertBefore(possession,liveStats.children[1]);
+      }
+      finalBox.classList.remove('hidden');
+      if(match.star){
+        const star=el('div','match-star'),info=el('div');info.append(el('span','panel-kicker','FIGURA'),el('strong','',match.star.name),el('small','',`${state.teams.find(t=>t.id===match.star.teamId)?.name||''} · ${match.star.pos} · ${match.star.goals} G · ${match.star.assists} A`));star.append(info,el('b','',String(match.star.rating)));finalBox.appendChild(star);
+      }
+      if(match.playerRatings?.length){
+        const ratings=el('div','match-ratings');ratings.appendChild(el('strong','match-section-title','Rendimientos'));
+        match.playerRatings.slice(0,6).forEach(p=>{const row=el('div','rating-row');row.append(el('span','',`${p.name} · ${state.teams.find(t=>t.id===p.teamId)?.name||''}`),el('b','',String(p.rating)));ratings.appendChild(row);});finalBox.appendChild(ratings);
+      }
+      finalBox.appendChild(el('div','chronicle',match.chronicle));
+      const bt=el('button','primary-button large','Volver al mapa');bt.addEventListener('click',()=>$('#matchDialog').close());finalBox.appendChild(bt);
+    })();
   }
 
   function aiTurn(team){
@@ -580,6 +679,8 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function init(){
     $('#versionLabel').textContent=`v${VERSION}`; updateContinue(); checkLatestVersion();
     $('#updateButton').addEventListener('click',installUpdate);
+    $('#bestXIButton').addEventListener('click',autoBestXI);
+    $('#matchDialog').addEventListener('close',()=>{matchPlaybackToken++;});
     $('#startSetupButton').addEventListener('click',()=>$('#setupDialog').showModal());
     $('#continueButton').addEventListener('click',()=>{state=load();if(state)showGame();});
     $('#newGameButton').addEventListener('click',()=>$('#setupDialog').showModal());
