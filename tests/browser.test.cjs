@@ -11,12 +11,23 @@ async function drain(p){for(let i=0;i<20;i++){await p.waitForTimeout(80);if(awai
  await new Promise(r=>server.listen(0,'127.0.0.1',r));browser=await chromium.launch({executablePath:process.env.CHROME_EXECUTABLE,headless:true,args:['--no-sandbox']});
  for(const width of [320,390,768,1440]){
   const context=await browser.newContext({viewport:{width,height:width<768?844:1000},isMobile:width<768,hasTouch:width<768});const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await create(p,3);
-  assert.equal(await p.locator('#versionLabel').innerText(),'v0.6.0');assert(await p.locator('#versionLabel').isVisible());assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Horizontal overflow at ${width}`);
+  assert.equal(await p.locator('#versionLabel').innerText(),'v0.6.1');assert(await p.locator('#versionLabel').isVisible());assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Horizontal overflow at ${width}`);
   if(width===390){await p.waitForTimeout(350);await p.evaluate(()=>scrollTo(0,0));}if(width===390)await p.screenshot({path:'/tmp/tregua-map.png',fullPage:true});
   const before=await stored(p);await p.locator('[data-action=pack]').click();assert.equal(await p.locator('#packResults .concealed').count(),5);assert.equal((await stored(p)).actionsLeft,2);await p.locator('#packResults .card-cover').first().click();assert.equal(await p.locator('#packResults .concealed').count(),4);await p.locator('#revealAllButton').click();assert.equal(await p.locator('#packResults .concealed').count(),0);if(width===390){await p.waitForTimeout(700);await p.locator('#packDialog').evaluate(d=>d.scrollTop=0);await p.screenshot({path:'/tmp/tregua-pack.png'});}await p.locator('#packDialog [data-close-dialog]').last().click();
   await p.locator('[data-nav=teamScreen]').click();await p.locator('#bestXIButton').click();const after=await stored(p);assert.equal(after.actionsLeft,2);assert.equal(new Set(after.teams[0].starters).size,11);assert(await p.evaluate(()=>__qa.getState().teams[0].starters.every((id,i)=>__qa.playerById(id).pos===__qa.SLOTS[i])));assert(after.teams[0].inventory.length===before.teams[0].inventory.length+5);await p.locator('#positionFilter').selectOption('DEF');await p.locator('#albumButton').click();assert.equal(await p.locator('#albumGrid .player-card').count(),28);await p.locator('#albumScreen [data-back]').click();
   await p.locator('[data-action=market]').click();await p.locator('#marketFilter').selectOption('DEL');await p.locator('#marketList button').first().click();assert.equal((await stored(p)).actionsLeft,1);await p.locator('#packDialog [data-close-dialog]').last().click();await p.locator('#marketScreen [data-back]').click();
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Overflow after acquisitions at ${width}`);await p.route('**/version.json*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({version:'0.6.1'})}));await p.reload();await p.locator('#updateButton').waitFor({state:'visible'});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Update header overflow at ${width}`);await context.close();console.log(`PASS mobile/desktop, pack, market, XI, album and update header (${width}px)`);
+ }
+ // Expansion stays available after another action without reactivating a flag/select mode.
+ {
+  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await create(p,3);
+  assert.equal(await p.locator('[data-action=expand]').count(),0);
+  const first=p.locator('#map .tile.available').first();assert(await first.isVisible());await first.click();assert.equal((await stored(p)).actionsLeft,2);
+  await p.locator('[data-action=pack]').click();assert.equal((await stored(p)).actionsLeft,1);await p.locator('#packDialog [data-close-dialog]').last().click();
+  const second=p.locator('#map .tile.available').first();assert(await second.isVisible());await second.click();assert.equal((await stored(p)).actionsLeft,0);
+  const minAction=await p.locator('.action-grid .action-button').evaluateAll(nodes=>Math.min(...nodes.map(n=>n.getBoundingClientRect().height)));assert(minAction>=44);
+  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  console.log('PASS default expansion after pack, touch targets and compact mobile map flow');await context.close();
  }
  for(const n of [2,3,4]){
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await create(p,n);
