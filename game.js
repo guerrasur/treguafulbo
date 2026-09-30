@@ -632,7 +632,7 @@
     }
     state.pendingTiebreaker=null;
     if(tb.scope==='tournament')finalizeTournament(winnerId);else finalizeLeague(winnerId,'desempate');
-    save();if(document.querySelector?.('#gameScreen')){render();setTimeout(()=>showGameOver(),0);}
+    save();if(document.querySelector?.('#gameScreen')){render();setTimeout(resumeTurnIntro,0);}
   }
   function resolveAutoTiebreaker(tb){
     const winner=tb.match.result==='draw'?automaticPenaltyWinner(tb.homeId,tb.awayId):(tb.match.result==='home'?tb.homeId:tb.awayId);
