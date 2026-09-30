@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#153b55" />
   <title>Treguafulbo</title>
   <meta name="description" content="Demo offline de Treguafulbo: fútbol y territorio." />
-  <link rel="stylesheet" href="styles.css?v=0.6.1" />
+  <link rel="stylesheet" href="styles.css?v=0.6.2" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -15,7 +15,7 @@
         <span class="brand-crown">♛</span>
         <span class="brand-title">TREGUAFULBO</span>
         <span class="brand-subtitle">FÚTBOL ENTRE TRINCHERAS</span>
-        <small id="versionLabel">v0.6.1</small>
+        <small id="versionLabel">v0.6.2</small>
       </button>
       <div class="topbar-actions">
         <button class="update-button hidden" id="updateButton" title="Instalar nueva versión">Actualizar</button>
@@ -35,7 +35,7 @@
             <div class="flag">⚑</div>
           </div>
           <div class="hero-copy">
-            <span class="eyebrow">DEMO OFFLINE · v0.6.1</span>
+            <span class="eyebrow">DEMO OFFLINE · v0.6.2</span>
             <h1>Mapa, plantel y partidos.</h1>
             <p>Expandí el mapa, armá tu equipo y competí en una liga de 6 partidos. Sin límite de tiempo.</p><div id="careerHome" class="career-home"></div>
             <button id="startSetupButton" class="primary-button large">Crear partida</button>
@@ -114,7 +114,7 @@
       </section>
 
       <section id="teamScreen" class="screen sub-screen hidden">
-        <div class="sub-header squad-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PLANTEL</span><h2 id="teamScreenTitle">Mi equipo</h2></div><button id="bestXIButton" class="secondary-button auto-xi-button">Mejor XI</button></div>
+        <div class="sub-header squad-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PLANTEL</span><h2 id="teamScreenTitle">Mi equipo</h2></div></div>
 
         <section class="panel-card squad-hero">
           <div id="squadHeroCrest" class="crest big"></div>
@@ -132,16 +132,16 @@
 
         <div id="teamProfile" class="team-profile"></div>
 
+        <div class="squad-tools"><label>Filtrar banco <select id="positionFilter"><option value="all">Todos</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label><button id="albumButton" class="secondary-button">Álbum y premios</button><span id="collectionCount"></span></div>
+        <div class="squad-grid">
+          <section class="panel-card roster-panel starters-panel"><div class="panel-heading mini roster-heading"><div><span class="panel-kicker">XI TITULAR</span><h3>Titulares</h3></div><button id="bestXIButton" class="secondary-button auto-xi-button">Asignar automáticamente</button></div><div id="startersList" class="player-list"></div></section>
+          <section class="panel-card roster-panel bench-panel"><div class="panel-heading mini roster-heading"><div><span class="panel-kicker">RESERVA</span><h3>Banco</h3></div></div><div id="benchList" class="player-list"></div></section>
+        </div>
+
         <section class="panel-card rivals-card">
           <div class="panel-heading mini"><div><span class="panel-kicker">COMPARACIÓN</span><h3>AVG de equipos</h3></div></div>
           <div id="rivalAvgList" class="rival-avg-list"></div>
         </section>
-
-        <div class="squad-tools"><label>Filtrar banco <select id="positionFilter"><option value="all">Todos</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label><button id="albumButton" class="secondary-button">Álbum y premios</button><span id="collectionCount"></span></div>
-        <div class="squad-grid">
-          <section class="panel-card"><div class="panel-heading mini"><div><span class="panel-kicker">XI TITULAR</span><h3>Formación</h3></div></div><div id="startersList" class="player-list"></div></section>
-          <section class="panel-card"><div class="panel-heading mini"><div><span class="panel-kicker">RESERVA</span><h3>Banco / inventario</h3></div></div><div id="benchList" class="player-list"></div></section>
-        </div>
       </section>
 
       <section id="marketScreen" class="screen sub-screen hidden">
@@ -151,8 +151,10 @@
       </section>
 
       <section id="leagueScreen" class="screen sub-screen hidden">
-        <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">LIGA</span><h2>Tabla y goleadores</h2></div></div>
-        <div class="notice-card">6 partidos por equipo · Victoria 3 puntos · Empate 1 · Derrota 0</div><div id="fixtureList" class="fixture-list panel-card"></div><div class="league-grid"><section class="panel-card"><h3>Posiciones</h3><div id="standings"></div></section><section class="panel-card"><h3>Goleadores</h3><div id="scorers"></div></section></div>
+        <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">LIGA</span><h2>Tabla y partidos</h2></div></div>
+        <section class="panel-card league-standings-card"><div class="panel-heading mini"><div><span class="panel-kicker">CLASIFICACIÓN</span><h3>Posiciones</h3></div></div><div id="standings"></div></section>
+        <div class="league-rules-note">6 partidos por equipo · Victoria 3 puntos · Empate 1 · Derrota 0</div>
+        <div class="league-secondary-grid"><section class="panel-card scorers-card"><div class="panel-heading mini"><div><span class="panel-kicker">GOLEADORES</span><h3>Máximos goleadores</h3></div></div><div id="scorers"></div></section><div id="fixtureList" class="fixture-list panel-card"></div></div>
       </section>
     <section id="albumScreen" class="screen sub-screen hidden"><div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">PROGRESO PERSONAL</span><h2>Álbum y premios</h2></div></div><div id="careerStats" class="notice-card"></div><div class="rules-note">El álbum y los premios se conservan entre partidas. Cada liga empieza con un plantel nuevo: no dan ventajas.</div><div id="trophyCabinet" class="trophy-cabinet"></div><div id="albumGrid" class="album-grid"></div></section>
     </main>
@@ -214,6 +216,6 @@
     <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
   </dialog>
 
-  <script src="game.js?v=0.6.1" defer></script>
+  <script src="game.js?v=0.6.2" defer></script>
 </body>
 </html>

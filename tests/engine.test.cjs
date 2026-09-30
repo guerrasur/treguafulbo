@@ -7,7 +7,7 @@ function engine(){
 function season(g,n){const teams=Array.from({length:n},(_,i)=>g.makeTeam(`t${i}`,`Equipo ${i}`,['#2f9d5b','#fff8df'],i===0));const s={id:`test-${Math.random()}`,seasonSchema:2,teams,fixtures:g.makeFixtures(teams),map:g.initialMap(n),matches:[],events:[],pendingHumanMatchIds:[],pendingTurnSummary:[],round:1,turnIndex:0,actionsLeft:3,finished:false};g.setState(s);return s;}
 for(const n of [2,3,4])test(`${n} equipos: 6 PJ exactos, cierre finito y conservación de puntos (100 ligas)`,()=>{
  for(let trial=0;trial<100;trial++){
-  const g=engine(),s=season(g,n);assert.equal(s.fixtures.length,n*3);
+  const g=engine(),s=season(g,n);assert.equal(s.fixtures.length,n*3);assert.equal(g.teamAvg(s.teams[0]),g.teamProfile(s.teams[0]).overall);
   for(const t of s.teams)assert.equal(s.fixtures.filter(f=>f.homeId===t.id||f.awayId===t.id).length,6);
   while(!s.finished&&s.round<30){
    // Mix territorial and fallback fixtures. Every third run has no territorial contact at all.
