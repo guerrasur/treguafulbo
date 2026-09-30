@@ -248,7 +248,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function slotPosition(index){return SLOTS[index]||'DEL';}
   function fitFactor(p,slot){
     if(p.pos===slot)return 1;
-    if(slot==='ARQ'||p.pos==='ARQ')return slot==='ARQ'?.36:.52;
+    if(slot==='ARQ'||p.pos==='ARQ')return slot==='ARQ' ? .36 : .52;
     const pair=new Set([p.pos,slot]);
     if(pair.has('MED')&&(pair.has('DEF')||pair.has('DEL')))return .84;
     return .69;
@@ -434,7 +434,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     });
     teams.forEach((team,side)=>{
       const won=score[side]>score[1-side],draw=score[side]===score[1-side],clean=score[1-side]===0;
-      rows.filter(r=>r.teamId===team.id).forEach(r=>{r.rating+=won?.2:draw?.05:-.12;if(clean&&(r.slot==='ARQ'||r.slot==='DEF'))r.rating+=.22;r.rating=round1(clamp(r.rating,4.5,10));});
+      rows.filter(r=>r.teamId===team.id).forEach(r=>{r.rating+=won ? .2 : draw ? .05 : -.12;if(clean&&(r.slot==='ARQ'||r.slot==='DEF'))r.rating+=.22;r.rating=round1(clamp(r.rating,4.5,10));});
     });
     return rows.sort((a,b)=>b.rating-a.rating||b.goals-a.goals||b.assists-a.assists);
   }
