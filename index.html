@@ -146,7 +146,7 @@
 
       <section id="marketScreen" class="screen sub-screen hidden">
         <div class="sub-header"><button class="back-button" data-back>← Mapa</button><div><span class="panel-kicker">MERCADO</span><h2>Fichajes</h2></div></div>
-        <div class="notice-card">Elegí un jugador concreto. Cuesta 1 acción, sin moneda.</div><label class="squad-tools">Posición <select id="marketFilter"><option value="all">Todas</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label>
+        <div id="scoutingInfo" class="notice-card">El territorio define cuántos jugadores observás por ronda. Fichar cuesta 1 acción.</div><label class="squad-tools">Posición <select id="marketFilter"><option value="all">Todas</option><option>ARQ</option><option>DEF</option><option>MED</option><option>DEL</option></select></label>
         <div id="marketList" class="market-list"></div>
       </section>
 
@@ -193,7 +193,7 @@
     <ol class="help-steps">
       <li><b>Objetivo.</b> Terminar primero en la liga. Cada equipo completa exactamente 6 partidos.</li>
       <li><b>Expandir.</b> Hay 3 acciones por turno. Mientras haya espacio accesible, se ocupan casillas libres adyacentes. Si tu equipo queda sin expansión libre —o el mapa está completo—, las casillas rivales de frontera se pueden disputar.</li>
-      <li><b>Plantel.</b> Fichar y abrir paquetes consume 1 acción. Reorganizar titulares sigue siendo gratis.</li>
+      <li><b>Plantel.</b> Fichar y abrir paquetes consume 1 acción. El Mercado muestra 3–6 jugadores observados por ronda según el territorio al iniciarla. Reorganizar titulares sigue siendo gratis.</li>
       <li><b>Stats.</b> Cada jugador tiene ATQ, PAS, DEF y ARQ. La posición natural y el puesto ocupado en el once afectan su aporte.</li>
       <li><b>Partido.</b> Durante la expansión, tres casillas propias adyacentes a una rival pueden generar un partido. Si ya no tenés expansión libre, una casilla rival de frontera marcada con ⚽ inicia un partido directo.</li>
       <li><b>Simulación.</b> El encuentro es 100% automático: no hay controles dentro del partido. El XI define ataque, mediocampo, defensa y arquero; el azar sigue permitiendo resultados inesperados.</li>
@@ -226,6 +226,6 @@
     <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
   </dialog>
 
-  <script src="game.js?v=0.6.3" defer></script>
+  <script src="game.js?v=0.6.4" defer></script>
 </body>
 </html>
