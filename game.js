@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.7.2';
+  const VERSION = '0.8.0';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -10,12 +10,14 @@
   const MATCH_MINUTE_MS = 100;
   const GOAL_PAUSE_MS = 1000;
 
-  const PLAYERS = [
+  const LEGACY_PLAYERS = [
     ['dibuan','D. Martino',80,'ARQ'],['terstegen','M. Terseg',84,'ARQ'],['alisson','A. Becker',86,'ARQ'],['rulli','G. Rulio',78,'ARQ'],
     ['otamendi','N. Otamendi',75,'DEF'],['romero','C. Romero',83,'DEF'],['araujo','R. Araujo',82,'DEF'],['lisandro','L. Martinez',81,'DEF'],['molina','N. Molina',77,'DEF'],['acuña','M. Acuña',76,'DEF'],['vanDijk','V. Dijker',88,'DEF'],
     ['depaul','R. De Paul',81,'MED'],['enzo','E. Fernandez',82,'MED'],['macallister','A. MacAller',84,'MED'],['bellingham','J. Belling',88,'MED'],['modric','L. Modrik',85,'MED'],['debruyne','K. De Bruyn',89,'MED'],['pedri','P. Gonzalez',85,'MED'],['valverde','F. Valverd',86,'MED'],
     ['messi','L. Mesia',91,'DEL'],['mbappe','K. Mbapé',91,'DEL'],['haaland','E. Haland',90,'DEL'],['julian','J. Alvarez',84,'DEL'],['lautaro','L. Martinez',86,'DEL'],['vinicius','V. Junior',89,'DEL'],['salah','M. Salah',88,'DEL'],['griezmann','A. Griezman',86,'DEL'],['son','H. Son',87,'DEL']
-  ].map(([id,name,rating,pos]) => ({id,name,rating,pos,unique:false}));
+  ].map(([id,name,rating,pos]) => ({id,name,rating,pos,unique:false,legacy:true}));
+  const ARGENTINA_PLAYERS_2026 = Array.isArray(globalThis.TREGUAFULBO_ARG_2026) ? globalThis.TREGUAFULBO_ARG_2026 : [];
+  const PLAYERS = [...ARGENTINA_PLAYERS_2026,...LEGACY_PLAYERS];
 
   const AI_PRESETS = [
     {name:'Rojo FC',colors:['#e85243','#52262a']},
@@ -158,13 +160,18 @@
     const obsolete=state.matches.filter(m=>m.countsForLeague===false);if(obsolete.length)fixtures.append(el('div','rules-note',`${obsolete.length} partidos anteriores conservados como amistosos; no cuentan para el calendario actual.`));
   }
   function rarity(p){return p.rating>=90?{key:'legend',label:'Legendario',symbol:'★★★★'}:p.rating>=87?{key:'epic',label:'Épico',symbol:'★★★'}:p.rating>=83?{key:'rare',label:'Destacado',symbol:'★★'}:{key:'base',label:'Base',symbol:'★'};}
+  function seasonSummary(p){
+    const s=p.seasonStats;if(!s)return '';
+    const club=p.club?p.club+' · ':'';
+    return club+s.matches+' PJ · '+s.goals+' G · '+s.assists+' A';
+  }
   function lineupComparison(p){const t=humanTeam(),same=t.starters.map(playerById).filter(x=>x.pos===p.pos),weak=same.sort((a,b)=>a.rating-b.rating)[0];return weak?`${p.rating>weak.rating?'+':''}${p.rating-weak.rating} AVG vs ${weak.name} (${weak.rating})`:'Sin titular natural en esa posición';}
   function playerCard(p,extra=''){
     const rare=rarity(p),card=el('div',`player-card rarity-${rare.key} ${extra}`);card.dataset.playerId=p.id;
     const top=el('div','card-top');top.append(el('b','card-rating',p.rating),el('span','card-position',p.pos));
     const art=el('div','card-art');art.style.setProperty('--shirt',({ARQ:'#efbe35',DEF:'#3f85d8',MED:'#2f9d5b',DEL:'#ea5546'})[p.pos]);art.append(el('span','card-monogram',p.name.split(' ').map(x=>x[0]).join('')));
     const skills=playerSkills(p),stats=el('div','card-stats');[['ATQ',skills.attack],['PAS',skills.passing],['DEF',skills.defense],['ARQ',skills.keeping]].forEach(([k,v])=>stats.append(el('span','',`${k} ${v}`)));
-    card.append(top,art,el('strong','card-name',p.name),el('small','card-rarity',`${rare.symbol} ${rare.label}`),stats);return card;
+    card.append(top,art,el('strong','card-name',p.name));const season=seasonSummary(p);if(season)card.append(el('small','card-season',season));card.append(el('small','card-rarity',`${rare.symbol} ${rare.label}`),stats);return card;
   }
   function renderCareerHome(){
     const b=$('#careerHome');if(!b)return;b.textContent=`Nivel ${careerLevel()} · Álbum ${profile.collection.length}/${PLAYERS.length} · ${profile.completed.length} ligas completadas`;
@@ -177,7 +184,7 @@
       card.append(el('strong','album-card-name','Por descubrir'),el('small','album-card-rarity','Carta bloqueada'));
       return card;
     }
-    const name=el('div','album-card-name-line');name.append(el('strong','album-card-name',p.name),el('span','rarity-stars',rare.symbol));card.append(name,el('small','album-card-rarity',rare.label));
+    const name=el('div','album-card-name-line');name.append(el('strong','album-card-name',p.name),el('span','rarity-stars',rare.symbol));card.append(name);const season=seasonSummary(p);if(season)card.append(el('small','album-card-season',season));card.append(el('small','album-card-rarity',rare.label));
     const skills=playerSkills(p),stats=el('div','album-card-stats');
     [['ATQ',skills.attack],['PAS',skills.passing],['DEF',skills.defense],['ARQ',skills.keeping]].forEach(([key,value])=>{const stat=el('span');stat.append(el('i','',key),el('b','',value));stats.append(stat);});card.append(stats);
     return card;
@@ -243,6 +250,16 @@
   function hashStat(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function statJitter(p,key,range=5){return (hashStat(`${p.id}|${p.rating}|${p.pos}|${key}`)%(range*2+1))-range;}
   function playerSkills(p){
+    const a=p.attributes;
+    if(a){
+      if(p.pos==='ARQ'&&(a.gkDiving||a.gkHandling||a.gkPositioning||a.gkReflexes)){
+        const keeper=mean([a.gkDiving,a.gkHandling,a.gkKicking,a.gkPositioning,a.gkReflexes].filter(Number.isFinite));
+        return {attack:clamp(Math.round((a.shooting||p.rating)*.38),5,99),passing:clamp(Math.round(a.gkKicking||a.passing||p.rating),5,99),defense:clamp(Math.round(((a.gkPositioning||p.rating)+(a.gkReflexes||p.rating))/2),5,99),keeping:clamp(Math.round(keeper||p.rating),5,99)};
+      }
+      if(a.shooting||a.passing||a.defending){
+        return {attack:clamp(Math.round((a.shooting||p.rating)*.5+(a.dribbling||p.rating)*.3+(a.pace||p.rating)*.2),5,99),passing:clamp(Math.round(a.passing||p.rating),5,99),defense:clamp(Math.round(a.defending||p.rating),5,99),keeping:5};
+      }
+    }
     const bias={ARQ:{attack:-43,passing:-12,defense:-8,keeping:10},DEF:{attack:-18,passing:-5,defense:10,keeping:-50},MED:{attack:-5,passing:10,defense:0,keeping:-52},DEL:{attack:10,passing:0,defense:-21,keeping:-55}}[p.pos];
     return {
       attack:clamp(Math.round(p.rating+bias.attack+statJitter(p,'attack')),5,99),
@@ -251,7 +268,7 @@
       keeping:clamp(Math.round(p.rating+bias.keeping+statJitter(p,'keeping')),5,99)
     };
   }
-  function slotPosition(index){return SLOTS[index]||'DEL';}
+    function slotPosition(index){return SLOTS[index]||'DEL';}
   function fitFactor(p,slot){
     if(p.pos===slot)return 1;
     if(slot==='ARQ'||p.pos==='ARQ')return slot==='ARQ' ? .36 : .52;
