@@ -2,6 +2,35 @@
 
 Demo offline de fútbol y conquista territorial.
 
+## v0.6.0
+
+Actualización completa integrada sobre `07e2be2`, sin perder la cola de partidos recibidos de v0.5.1. El usuario confirmó el final por **liga de seis partidos por equipo**, que reemplaza el final territorial anterior.
+
+- calendario finito para 2–4 equipos; cruces territoriales y partidos de respaldo al cerrar ronda;
+- previa con escudos y atributos, cancha ilustrativa, pausa voluntaria, ×1/×2 y resultado al FINAL;
+- partido pendiente guardado antes de reproducir; recargar no genera otro resultado;
+- tarjetas de cuatro rarezas, revelación individual de paquetes, filtros por posición y comparación con el XI;
+- álbum, XP y premios persistentes sin ventajas estadísticas entre partidas;
+- podio diferenciado de oro, plata y bronce; campeón, goleador y cierre de liga;
+- sonido opcional, movimiento reducido y versión visible debajo del título en celular;
+- pruebas automatizadas de liga, simulación, migración, premios, guardado e interfaz.
+
+[Análisis, referencias, plan completo y próxima ronda](docs/UPDATE-v0.6.0.md).
+
+### Ejecutar y probar
+
+Abrir con un servidor estático (`python -m http.server 8000`) o GitHub Pages. No requiere build.
+
+```sh
+node --test tests/engine.test.cjs
+```
+
+Las pruebas de navegador requieren Playwright y Chromium. No son dependencias del juego:
+
+```sh
+PLAYWRIGHT_MODULE=/ruta/a/playwright CHROME_EXECUTABLE=/ruta/a/chromium node tests/browser.test.cjs
+```
+
 ## v0.5.1
 
 - los partidos que una IA juega contra el equipo humano quedan pendientes y se reproducen al comenzar el siguiente turno del jugador, en lugar de aparecer sólo como texto en el resumen;
@@ -78,6 +107,12 @@ Demo offline de fútbol y conquista territorial.
 - guardado local con localStorage;
 - sin temporizador.
 
+## Regla de final vigente (v0.6.0)
+
+Todos los equipos completan 6 PJ. La clasificación usa puntos, diferencia de gol, goles a favor y una minitabla de enfrentamientos directos entre los equipos empatados; si aún persiste igualdad, se comparte posición. El territorio no agrega puntos y perder todas las casillas no elimina de la liga.
+
+Los cruces territoriales consumen un encuentro de esa pareja en el calendario. El cierre manual de ronda garantiza los pendientes, incluso sin contacto entre equipos. Nadie juega más de 6 PJ; la liga termina al completar todas las fechas.
+
 ## Decisiones provisorias
 
 - Inicio: 3 casillas por equipo.
@@ -105,7 +140,7 @@ Treguafulbo está pensado para multiplayer asincrónico con amigos y sin presió
 
 ## Arquitectura
 
-Demo estática sin backend ni build. La primera versión se concentra en `index.html` para facilitar prueba e iteración. GitHub Pages sirve `main`.
+Demo estática sin backend ni build: `index.html` (estructura), `styles.css` (presentación) y `game.js` (reglas, estado e interfaz). GitHub Pages sirve `main`.
 
 Save actual: `treguafulbo-demo-v1`. Se conserva compatibilidad con `trucebol-demo-v1` para migrar partidas previas.
 

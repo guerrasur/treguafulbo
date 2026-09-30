@@ -2,7 +2,7 @@
 
 ## Producto
 
-Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.5.0 es local: 1 humano y 1–3 rivales simulados.
+Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.6.0 es local: 1 humano y 1–3 rivales simulados.
 
 ## NEXO
 
@@ -61,7 +61,22 @@ Problema técnico principal: para que funcione bien no alcanza con agregar boton
 
 Antes de implementar esta dirección hay que prototipar por separado al menos: remate al arco, pase/centro y cómo se generan/distribuyen las oportunidades según AVG, sin comprometer todavía el sistema de liga ni el mapa.
 
-## v0.5.1
+## v0.6.0 — invariantes vigentes
+
+- Integra la actualización paralela `07e2be2`. Mantener la cola persistente de partidos recibidos y su reproducción antes del resumen.
+- **Final confirmado por el usuario:** liga con exactamente 6 partidos por equipo; la condición territorial de v0.5.1 queda reemplazada. Ningún equipo se elimina de la liga por tener 0 casillas.
+- Calendario de seis PJ con cuotas por pareja. Cruces por presión y disputa cuentan; el cierre de ronda completa cruces pendientes sin necesitar contacto territorial. No exceder el calendario.
+- Clasificación: puntos, DG, GF y minitabla entre equipos empatados. Compartir posición ante igualdad absoluta; no inventar desempates por territorio o por orden de equipo.
+- Guardar `pendingMatch` con resultado y eventos ya simulados antes de abrir previa. En recarga, reanudar ese encuentro, sin volver a simular ni cobrar otra acción. Resolver y premiar una sola vez.
+- Premios y álbum persistentes son cosméticos/de registro. Nuevas ligas conservan la igualdad de planteles de inicio. No otorgar ventajas estadísticas por XP o medallas.
+- No gastar acción en paquete sin jugadores disponibles; no entregar duplicados del plantel. Mercado y paquete siguen consumiendo una acción, sin moneda.
+- Previa explícita antes de reproducir. Cancha ilustrativa de eventos, sin motor físico ni controles de jugadas. Pausa y ritmo son controles de visualización.
+- Mantener los 22 rendimientos y todos los datos del informe. Una repetición no modifica tabla, territorios ni recompensas.
+- Respetar `prefers-reduced-motion`, sonido optativo y versión siempre visible debajo del título en móvil.
+- Mantener consistentes VERSION, encabezado, URLs de assets y version.json. La aplicación no tiene build: index.html, styles.css, game.js.
+- Ejecutar `node --test tests/engine.test.cjs` y pruebas de navegador documentadas en README antes de publicar.
+
+## v0.5.1 (histórico: final territorial sustituido en v0.6.0)
 
 - Todo partido generado durante el turno de una IA que involucre al humano debe mostrarse al comenzar el siguiente turno humano. No alcanza con incluir el resultado en el resumen.
 - Si hay varios partidos pendientes contra el humano, reproducirlos en orden antes de mostrar el resumen de ronda.
