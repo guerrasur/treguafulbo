@@ -232,11 +232,18 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     <button class="primary-button large" data-close-dialog>Continuar</button>
   </dialog>
 
+  <dialog id="gameOverDialog" class="game-dialog">
+    <div class="dialog-heading"><div><span class="panel-kicker">FIN DE PARTIDA</span><h2 id="gameOverTitle">Partida terminada</h2></div></div>
+    <div id="gameOverText" class="chronicle"></div>
+    <button class="secondary-button large" data-close-dialog>Ver mapa</button>
+    <button id="gameOverNewButton" class="primary-button large">Nueva partida</button>
+  </dialog>
+
   <script>
 (() => {
   'use strict';
 
-  const VERSION = '0.5.0';
+  const VERSION = '0.5.1';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -261,6 +268,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   let activeAction = 'expand';
   let pendingSummary = [];
   let matchPlaybackToken = 0;
+  let matchCloseHandler = null;
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -280,6 +288,11 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
       parsed.version=VERSION;
       parsed.events=Array.isArray(parsed.events)?parsed.events:[];
       parsed.matches=Array.isArray(parsed.matches)?parsed.matches:[];
+      parsed.pendingHumanMatchIds=Array.isArray(parsed.pendingHumanMatchIds)?parsed.pendingHumanMatchIds.filter(id=>parsed.matches.some(m=>m.id===id)):[];
+      parsed.pendingTurnSummary=Array.isArray(parsed.pendingTurnSummary)?parsed.pendingTurnSummary:[];
+      parsed.finished=!!parsed.finished;
+      parsed.winnerId=parsed.winnerId||null;
+      parsed.finishReason=parsed.finishReason||null;
       parsed.teams.forEach(t=>{t.scorers=t.scorers||{};});
       const humanIndex=parsed.teams.findIndex(t=>t.human);
       if(humanIndex>=0&&(!Number.isInteger(parsed.turnIndex)||!parsed.teams[parsed.turnIndex]||!parsed.teams[parsed.turnIndex].human))parsed.turnIndex=humanIndex;
@@ -372,7 +385,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     const teams=[makeTeam('t0',name,colors,true)];
     for(let i=1;i<count;i++){ const p=AI_PRESETS[i-1]; teams.push(makeTeam(`t${i}`,p.name,p.colors,false)); }
     activeAction='expand';matchPlaybackToken++;
-    state={version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map:initialMap(count),events:[],matches:[],startedAt:Date.now()};
+    state={version:VERSION,round:1,turnIndex:0,actionsLeft:CONFIG.actionsPerTurn,teams,map:initialMap(count),events:[],matches:[],pendingHumanMatchIds:[],pendingTurnSummary:[],finished:false,winnerId:null,finishReason:null,startedAt:Date.now()};
     addEvent('Partida creada',`${CONFIG.startingTiles} sectores iniciales.`);
     save(); showGame();
   }
@@ -459,6 +472,60 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   }
 
 
+  function finishGame(reason,winnerId=null){
+    if(state.finished)return false;
+    state.finished=true;state.finishReason=reason;state.winnerId=winnerId;
+    const winner=winnerId?state.teams.find(t=>t.id===winnerId):null,human=humanTeam();
+    const text=winner?winner.name+' gana la partida.':human.name+' quedó sin territorio.';
+    addEvent('Partida terminada',text,'match');
+    return true;
+  }
+  function evaluateGameEnd(){
+    if(state.finished)return true;
+    const alive=state.teams.filter(t=>ownedTiles(t.id).length>0),human=humanTeam();
+    if(ownedTiles(human.id).length===0)return finishGame('human-eliminated',alive.length===1?alive[0].id:null);
+    if(alive.length===1)return finishGame('territory',alive[0].id);
+    if(alive.length===0)return finishGame('draw',null);
+    return false;
+  }
+  function showGameOver(){
+    if(!state||!state.finished)return;
+    const dialog=$('#gameOverDialog');if(dialog.open)return;
+    const winner=state.winnerId?state.teams.find(t=>t.id===state.winnerId):null,human=humanTeam();
+    let title='Partida terminada',text='La partida terminó.';
+    if(state.finishReason==='human-eliminated'){
+      title='Derrota';
+      text=winner?human.name+' se quedó sin territorio. '+winner.name+' es el único equipo que sigue en el mapa.':human.name+' se quedó sin territorio.';
+    }else if(winner){
+      title=winner.human?'Victoria':'Derrota';
+      text=winner.name+' controla todo el territorio.';
+    }else if(state.finishReason==='draw'){title='Empate';text='Ningún equipo conserva territorio.';}
+    $('#gameOverTitle').textContent=title;$('#gameOverText').textContent=text;dialog.showModal();
+  }
+  function showTurnSummary(){
+    if(!state.pendingTurnSummary||!state.pendingTurnSummary.length)return false;
+    const box=$('#turnSummary');box.innerHTML='';state.pendingTurnSummary.forEach(s=>box.appendChild(el('div','summary-item',s)));
+    const dialog=$('#summaryDialog');if(!dialog.open)dialog.showModal();
+    return true;
+  }
+  function resumeTurnIntro(){
+    if(!state)return;
+    const queue=state.pendingHumanMatchIds||(state.pendingHumanMatchIds=[]);
+    while(queue.length){
+      const id=queue[0],match=state.matches.find(m=>m.id===id);
+      if(!match){queue.shift();continue;}
+      save();
+      showMatch(match,null,()=>{
+        if(state.pendingHumanMatchIds&&state.pendingHumanMatchIds[0]===id)state.pendingHumanMatchIds.shift();
+        save();resumeTurnIntro();
+      });
+      return;
+    }
+    save();render();
+    if(showTurnSummary())return;
+    if(state.finished)showGameOver();
+  }
+
   function render(){
     if(!state)return;
     const team=currentTeam();
@@ -520,10 +587,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   }
 
   function renderFeed(){ const f=$('#eventFeed'); f.innerHTML=''; state.events.slice(0,8).forEach(ev=>{const d=el('div',`event ${ev.type==='match'?'match':''}`);d.append(el('strong','',ev.title),el('span','',ev.text));f.appendChild(d);}); if(!state.events.length)f.textContent='Sin novedades todavía.'; }
-  function renderButtons(){ const humanTurn=currentTeam().human; $$('.action-button').forEach(b=>{ b.disabled=!humanTurn || (state.actionsLeft<=0 && b.dataset.action!=='squad'); b.classList.toggle('selected',b.dataset.action===activeAction); }); $('#endTurnButton').disabled=!humanTurn; }
+  function renderButtons(){ const humanTurn=currentTeam().human&&!state.finished; $$('.action-button').forEach(b=>{ b.disabled=!humanTurn || (state.actionsLeft<=0 && b.dataset.action!=='squad'); b.classList.toggle('selected',b.dataset.action===activeAction); }); $('#endTurnButton').disabled=!humanTurn; }
 
   function handleTile(cell){
-    if(!currentTeam().human||activeAction!=='expand'||state.actionsLeft<=0)return;
+    if(state.finished||!currentTeam().human||activeAction!=='expand'||state.actionsLeft<=0)return;
     const human=humanTeam();
     if(!cell.owner){
       const allowed=availableExpansion(human).some(c=>c.x===cell.x&&c.y===cell.y);if(!allowed)return;
@@ -537,15 +604,15 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   }
 
   function openScreen(id){ $$('.screen').forEach(s=>s.classList.add('hidden')); $('#'+id).classList.remove('hidden'); $('#bottomNav').classList.toggle('hidden',id==='welcomeScreen'); $$('#bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id)); if(state)render(); window.scrollTo({top:0,behavior:'smooth'}); }
-  function showGame(){ $('#welcomeScreen').classList.add('hidden'); $('#bottomNav').classList.remove('hidden'); openScreen('gameScreen'); render(); }
+  function showGame(){ $('#welcomeScreen').classList.add('hidden'); $('#bottomNav').classList.remove('hidden'); openScreen('gameScreen'); render(); setTimeout(resumeTurnIntro,0); }
 
   function openAction(action){ activeAction=action; if(action==='market')openScreen('marketScreen'); else if(action==='squad')openScreen('teamScreen'); else if(action==='pack')openPack(); else {openScreen('gameScreen');render();} }
 
   function renderMarket(){ if(!state)return; const list=$('#marketList'); list.innerHTML=''; const team=humanTeam(); const pool=PLAYERS.filter(p=>!team.inventory.includes(p.id)).sort((a,b)=>b.rating-a.rating).slice(0,12); pool.forEach(p=>{const r=el('div','market-row'); const av=el('div','player-avatar',p.pos); const info=el('div'); const sk=playerSkills(p); info.append(el('strong','',p.name),el('small','',` ${p.pos} · ATQ ${sk.attack} · PAS ${sk.passing} · DEF ${sk.defense} · ARQ ${sk.keeping}`)); const rt=el('div','rating',p.rating); const bt=el('button','', 'Fichar'); bt.disabled=state.actionsLeft<=0||!currentTeam().human; bt.addEventListener('click',()=>signPlayer(p.id)); r.append(av,info,rt,bt);list.appendChild(r);}); }
-  function signPlayer(id){ const team=humanTeam(); if(state.actionsLeft<=0||team.inventory.includes(id))return; team.inventory.push(id); state.actionsLeft--; const p=playerById(id); addEvent('Fichaje',`${p.name} · ${p.rating}.`); save(); render(); }
+  function signPlayer(id){ const team=humanTeam(); if(state.finished||state.actionsLeft<=0||team.inventory.includes(id))return; team.inventory.push(id); state.actionsLeft--; const p=playerById(id); addEvent('Fichaje',`${p.name} · ${p.rating}.`); save(); render(); }
 
   function weightedPack(team,count=5){ const pool=PLAYERS.filter(p=>!team.inventory.includes(p.id)); const out=[]; while(pool.length&&out.length<count){ const weights=pool.map(p=>Math.max(1,100-p.rating)); const total=weights.reduce((a,b)=>a+b,0); let r=Math.random()*total,ix=0; for(;ix<weights.length;ix++){r-=weights[ix];if(r<=0)break;} out.push(pool.splice(Math.min(ix,pool.length-1),1)[0]); } return out; }
-  function openPack(){ if(!currentTeam().human||state.actionsLeft<=0)return; const team=humanTeam(); const picks=weightedPack(team,5); if(!picks.length){addEvent('Paquete vacío','Ya tenés a todos los jugadores de la base.');render();return;} picks.forEach(p=>team.inventory.push(p.id)); state.actionsLeft--; $('#packResults').innerHTML=''; picks.forEach(p=>{const c=el('div','pack-card'); c.append(el('div','player-avatar',p.pos),el('strong','',p.name),el('b','',p.rating));$('#packResults').appendChild(c);}); addEvent('Paquete abierto',`Se sumaron ${picks.length} jugadores al inventario.`); save();render();$('#packDialog').showModal(); }
+  function openPack(){ if(state.finished||!currentTeam().human||state.actionsLeft<=0)return; const team=humanTeam(); const picks=weightedPack(team,5); if(!picks.length){addEvent('Paquete vacío','Ya tenés a todos los jugadores de la base.');render();return;} picks.forEach(p=>team.inventory.push(p.id)); state.actionsLeft--; $('#packResults').innerHTML=''; picks.forEach(p=>{const c=el('div','pack-card'); c.append(el('div','player-avatar',p.pos),el('strong','',p.name),el('b','',p.rating));$('#packResults').appendChild(c);}); addEvent('Paquete abierto',`Se sumaron ${picks.length} jugadores al inventario.`); save();render();$('#packDialog').showModal(); }
 
   function renderSquad(){
     if(!state)return;
@@ -594,6 +661,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     return sk.attack*.7+sk.passing*.15+p.rating*.15;
   }
   function autoBestXI(){
+    if(state&&state.finished)return;
     const team=humanTeam(),remaining=team.inventory.map(playerById).filter(Boolean),picked=[];
     SLOTS.forEach(slot=>{
       let candidates=remaining.filter(p=>p.pos===slot);
@@ -639,17 +707,18 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     state.matches.push(match);
     return true;
   }
-  function finalizeBattle(match,frontCell){
+  function finalizeBattle(match,frontCell,renderNow=true){
     if(!commitMatchStats(match))return false;
     applyMatch(match,frontCell);
+    evaluateGameEnd();
     addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match');
-    save();render();return true;
+    save();if(renderNow)render();return true;
   }
   function checkBattles(provokerId,show,preferredDefenderId=null){
     const candidates=battleCandidates(provokerId).filter(c=>!pairPlayedThisRound(provokerId,c.defenderId));
     const c=(preferredDefenderId?candidates.find(x=>x.defenderId===preferredDefenderId):null)||candidates[0];if(!c)return null;
     const match=simulateMatch(provokerId,c.defenderId,c.cell);
-    const finalize=()=>finalizeBattle(match,c.cell);
+    const finalize=()=>finalizeBattle(match,c.cell,show);
     if(show)showMatch(match,finalize);else finalize();
     return match;
   }
@@ -737,8 +806,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
       if(!commitMatchStats(match))return false;
       const liveCell=state.map[idx(target.x,target.y)];
       if(match.result==='home'&&liveCell&&liveCell.owner===target.owner)liveCell.owner=attacker.id;
+      evaluateGameEnd();
       addEvent(`${match.homeName} ${match.homeGoals}-${match.awayGoals} ${match.awayName}`,match.chronicle,'match');
-      save();render();return true;
+      save();if(show)render();return true;
     };
     if(show)showMatch(match,finalize);else finalize();
     return match;
@@ -751,8 +821,8 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     if(e.type==='block')return `Remate de ${e.playerName} · bloqueado por ${e.defenderName}`;
     return `Remate de ${e.playerName} · afuera`;
   }
-  function showMatch(match,onFinal=null){
-    const dialog=$('#matchDialog');dialog.dataset.playing='1';
+  function showMatch(match,onFinal=null,onClose=null){
+    const dialog=$('#matchDialog');dialog.dataset.playing='1';matchCloseHandler=typeof onClose==='function'?onClose:null;
     const token=++matchPlaybackToken,home=state.teams.find(t=>t.id===match.homeId),away=state.teams.find(t=>t.id===match.awayId),c=$('#matchContent');c.innerHTML='';
     const head=el('div','dialog-heading'),tx=el('div');tx.append(el('span','panel-kicker','PARTIDO EN VIVO'),el('h2','',`Sector ${match.front.x+1}-${match.front.y+1}`));head.append(tx);c.appendChild(head);
     const minute=el('div','match-minute',"0'"),goalBanner=el('div','goal-banner hidden','GOL');
@@ -810,18 +880,24 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
 
   function aiTurn(team){
     const matches=[]; state.actionsLeft=CONFIG.actionsPerTurn;
-    for(let a=0;a<CONFIG.actionsPerTurn;a++){
+    const record=m=>{
+      if(!m)return;
+      matches.push(m.homeName+' '+m.homeGoals+'-'+m.awayGoals+' '+m.awayName);
+      const human=humanTeam();
+      if((m.homeId===human.id||m.awayId===human.id)&&!state.pendingHumanMatchIds.includes(m.id))state.pendingHumanMatchIds.push(m.id);
+    };
+    for(let a=0;a<CONFIG.actionsPerTurn&&!state.finished;a++){
       const options=availableExpansion(team);
       if(options.length){
         const target=chooseAiExpansion(team,options);target.owner=team.id;state.actionsLeft--;
-        const m=checkBattles(team.id,false);if(m)matches.push(`${m.homeName} ${m.homeGoals}-${m.awayGoals} ${m.awayName}`);
+        const m=checkBattles(team.id,false);record(m);
         continue;
       }
       const disputes=disputableFrontier(team);
       if(disputes.length){
         const target=chooseAiDispute(team,disputes);state.actionsLeft--;
         const m=playFrontierDispute(team.id,target,false);
-        if(m)matches.push(`${m.homeName} ${m.homeGoals}-${m.awayGoals} ${m.awayName}`);
+        record(m);
         continue;
       }
       break;
@@ -833,11 +909,12 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
   function nearestEnemy(c,enemies){return Math.min(...enemies.map(e=>Math.abs(c.x-e.x)+Math.abs(c.y-e.y)));}
 
   function endTurn(){
-    if(!currentTeam().human)return;
-    pendingSummary=[];
+    if(state.finished||!currentTeam().human)return;
+    pendingSummary=[];state.pendingHumanMatchIds=state.pendingHumanMatchIds||[];
     const ownersBefore=state.map.map(c=>c.owner);
     const matchSummaries=[];
-    for(let i=1;i<state.teams.length;i++){
+    for(let i=1;i<state.teams.length&&!state.finished;i++){
+      if(ownedTiles(state.teams[i].id).length===0)continue;
       state.turnIndex=i;
       matchSummaries.push(...aiTurn(state.teams[i]));
     }
@@ -861,8 +938,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     matchSummaries.forEach(result=>pendingSummary.push(`Partido: ${result}.`));
     if(!pendingSummary.length)pendingSummary.push('Sin cambios territoriales ni partidos.');
 
-    state.round++; state.turnIndex=0; state.actionsLeft=CONFIG.actionsPerTurn; activeAction='expand'; addEvent('Ronda',`${state.round}.`); save(); render();
-    const box=$('#turnSummary');box.innerHTML='';pendingSummary.forEach(s=>box.appendChild(el('div','summary-item',s)));$('#summaryDialog').showModal();
+    if(!state.finished){state.round++;addEvent('Ronda',String(state.round)+'.');}
+    state.turnIndex=0; state.actionsLeft=CONFIG.actionsPerTurn; activeAction='expand';
+    state.pendingTurnSummary=[...pendingSummary];
+    save();resumeTurnIntro();
   }
 
   function renderStandings(){ if(!state)return; const sorted=[...state.teams].sort((a,b)=>b.points-a.points||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf); const wrap=$('#standings');wrap.innerHTML='';const t=el('table','standings-table');const h=el('tr');['#','Equipo','AVG','PJ','DG','PTS'].forEach(x=>h.appendChild(el('th','',x)));t.appendChild(h);sorted.forEach((tm,i)=>{const r=el('tr');const teamCell=el('td');const dot=el('i','team-dot');dot.style.background=pattern(tm);teamCell.append(dot,document.createTextNode(tm.name)); [i+1,teamCell,teamAvg(tm),tm.played,tm.gf-tm.ga,tm.points].forEach((v,j)=>{ if(j===1)r.appendChild(v); else r.appendChild(el('td','',String(v)));});t.appendChild(r);});wrap.appendChild(t);
@@ -898,7 +977,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;ba
     $('#bestXIButton').addEventListener('click',autoBestXI);
     const matchDialog=$('#matchDialog');
     matchDialog.addEventListener('cancel',e=>{if(matchDialog.dataset.playing==='1')e.preventDefault();});
-    matchDialog.addEventListener('close',()=>{matchDialog.dataset.playing='0';matchPlaybackToken++;});
+    matchDialog.addEventListener('close',()=>{matchDialog.dataset.playing='0';matchPlaybackToken++;const cb=matchCloseHandler;matchCloseHandler=null;if(cb)cb();else if(state&&state.finished)showGameOver();});
+    $('#summaryDialog').addEventListener('close',()=>{if(!state)return;state.pendingTurnSummary=[];save();render();if(state.finished)showGameOver();});
+    $('#gameOverNewButton').addEventListener('click',()=>{$('#gameOverDialog').close();$('#setupDialog').showModal();});
     $('#startSetupButton').addEventListener('click',()=>$('#setupDialog').showModal());
     $('#continueButton').addEventListener('click',()=>{state=load();if(state)showGame();});
     $('#newGameButton').addEventListener('click',()=>$('#setupDialog').showModal());
