@@ -4,9 +4,11 @@ Actualizado: 2026-09-30.
 
 ## Alcance
 
-La base integrada en `players-argentina-2026.js` contiene 957 futbolistas únicos de los 30 clubes que aparecen en el dataset de Primera División Argentina 2026.
+La base activa integrada en `players-argentina-2026.js` contiene **200 futbolistas** y cubre los **30 clubes** de Primera División Argentina 2026.
 
-El dataset original contiene 975 filas. Hay 18 nombres que aparecen en dos clubes por transferencias dentro de la temporada; Treguafulbo los consolida en una sola carta y suma sus estadísticas de ambos pasos, conservando la lista de clubes.
+La fuente consolidada previa contiene 957 futbolistas únicos. Para Treguafulbo se usa una selección más manejable: primero se reservan los 5 jugadores mejor valorados de cada club y luego se completa hasta 200 por AVG, usando minutos 2026 como desempate. Las transferencias internas siguen consolidadas en una sola carta y conservan todos sus clubes.
+
+Distribución activa: 24 ARQ · 71 DEF · 67 MED · 38 DEL.
 
 ## Fuentes
 
@@ -21,14 +23,14 @@ El dataset original contiene 975 filas. Hay 18 nombres que aparecen en dos clube
 
 Por futbolista se guardan: club o clubes, posición, PJ, titularidades, minutos, goles, asistencias, amarillas, rojas, remates, remates al arco, quites ganados, intercepciones, atajadas, tiros al arco recibidos, vallas invictas y valor de mercado cuando la fuente lo provee.
 
-556 futbolistas se pudieron cruzar por identidad con el snapshot FC 27 y conservan RIT/TIR/PAS/REG/DEF/FÍS y atributos específicos de arquero. Esos atributos alimentan ATQ/PAS/DEF/ARQ dentro del motor.
+182 de las 200 cartas activas están cruzadas con el snapshot FC 27 y conservan RIT/TIR/PAS/REG/DEF/FÍS y atributos específicos de arquero. Esos atributos alimentan ATQ/PAS/DEF/ARQ dentro del motor.
 
 ## AVG para jugadores sin cruce FC 27
 
-401 futbolistas —principalmente juveniles, reservas y altas recientes— no tienen una coincidencia fiable en ese snapshot. Su `rating` de Treguafulbo se calcula únicamente para balance del juego usando valor de mercado, minutos y producción 2026 ajustada por posición. Está limitado al rango 55–82.
+18 cartas activas no tienen una coincidencia fiable en ese snapshot. Su `rating` de Treguafulbo se calcula únicamente para balance del juego usando la metodología de la base consolidada; no debe presentarse como un rating oficial de EA.
 
-Ese AVG derivado **no es un rating oficial de EA**. Las estadísticas de temporada permanecen separadas y no se sustituyen por valores inventados.
+Las estadísticas de temporada permanecen separadas y no se sustituyen por valores inventados.
 
 ## Compatibilidad
 
-Las 28 cartas históricas que existían hasta v0.7.2 se mantienen como `legacy` para que inventarios y saves previos no pierdan IDs. Las nuevas cartas usan IDs con prefijo `arg26-`.
+Las 29 cartas históricas que existían hasta v0.7.2 mantienen sus IDs en un índice de compatibilidad para poder resolver saves previos, pero **no integran el pool activo de 200**, ni aparecen en sobres, mercado o Álbum de una partida nueva.
