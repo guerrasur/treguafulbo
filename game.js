@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.8.1';
+  const VERSION = '0.8.2';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const SLOTS = ['ARQ','DEF','DEF','DEF','DEF','MED','MED','MED','DEL','DEL','DEL'];
@@ -619,7 +619,7 @@
   function openScreen(id){ if(id==='gameScreen')activeAction='expand'; $$('.screen').forEach(s=>s.classList.add('hidden')); $('#'+id).classList.remove('hidden'); $('#bottomNav').classList.toggle('hidden',id==='welcomeScreen'); $$('#bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===id)); if(state)render(); window.scrollTo({top:0,behavior:'auto'}); }
   function showGame(){ $('#welcomeScreen').classList.add('hidden'); $('#bottomNav').classList.remove('hidden'); openScreen('gameScreen'); render(); setTimeout(resumeTurnIntro,0); }
 
-  function openAction(action){if(action==='reinforce'){activeAction='reinforce';render();return;}activeAction='expand';if(action==='market')openScreen('marketScreen');else if(action==='squad')openScreen('teamScreen');else if(action==='pack')openPack();else{openScreen('gameScreen');render();}}
+  function openAction(action){if(action==='reinforce'){activeAction='reinforce';render();return;}activeAction='expand';if(action==='market')openScreen('marketScreen');else if(action==='squad')openScreen('teamScreen');else if(action==='pack')confirmPackPurchase();else{openScreen('gameScreen');render();}}
 
   function scoutingCapacity(territory){
     if(territory>=15)return 6;
@@ -656,6 +656,14 @@
   function weightedPack(team,count=5){
     const pool=PLAYERS.filter(p=>!team.inventory.includes(p.id)),out=[];
     while(pool.length&&out.length<count){const pick=weightedPick(pool,packWeight);out.push(pick);pool.splice(pool.findIndex(p=>p.id===pick.id),1);}return out;
+  }
+  function confirmPackPurchase(){
+    if(state.finished||!currentTeam().human)return;const team=humanTeam();
+    if(team.inventory.length>=PLAYERS.length){toast('Plantel completo.');return;}
+    if(team.coins<CONFIG.packCost){toast(`Necesitás ${CONFIG.packCost} monedas.`);return;}
+    $('#packConfirmPrice').textContent=`${CONFIG.packCost} monedas`;
+    $('#packConfirmCoins').textContent=`Tenés ${team.coins} monedas · te quedan ${team.coins-CONFIG.packCost}`;
+    $('#packConfirmDialog').showModal();
   }
   function openPack(){
     if(state.finished||!currentTeam().human)return;const team=humanTeam();if(team.coins<CONFIG.packCost){toast(`Necesitás ${CONFIG.packCost} monedas.`);return;}const picks=weightedPack(team,5);
@@ -1077,7 +1085,8 @@
     $('#helpButton').addEventListener('click',()=>$('#helpDialog').showModal());
     $('#brandButton').addEventListener('click',()=>state?openScreen('gameScreen'):openScreen('welcomeScreen'));
     $('#endTurnButton').addEventListener('click',endTurn); $('#clearFeedButton').addEventListener('click',()=>{state.events=[];save();render();});
-    $$('.action-button').forEach(b=>b.addEventListener('click',()=>openAction(b.dataset.action)));
+    $('.action-button').forEach(b=>b.addEventListener('click',()=>openAction(b.dataset.action)));
+    $('#confirmPackButton').addEventListener('click',()=>{const dialog=$('#packConfirmDialog');if(dialog.open)dialog.close();openPack();});
     $$('[data-nav]').forEach(b=>b.addEventListener('click',()=>openScreen(b.dataset.nav)));
     $$('[data-back]').forEach(b=>b.addEventListener('click',()=>openScreen('gameScreen')));
     $$('[data-close-dialog]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
