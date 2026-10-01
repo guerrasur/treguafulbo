@@ -2,7 +2,15 @@
 
 ## Producto
 
-Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.9.0 es local: 1 humano y 1–3 rivales simulados. La estructura competitiva usa Torneos dentro de una Liga persistente.
+Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.9.1 es local: 1 humano y 1–3 rivales simulados. La estructura competitiva usa Torneos dentro de una Liga persistente.
+
+## Verificaciones de v0.9.1
+
+- Declarar las claves de almacenamiento antes de inicializar `profile`; una excepción capturada no debe ocultar una pérdida de progreso.
+- En penales, la elección de cada arquero pertenece a su propio equipo y se compara con el remate rival.
+- Recargar debe conservar progreso personal, partido de desempate, ronda de penales y elecciones pendientes.
+- Las tablas finales deben coincidir con el campeón decidido por el desempate y con el podio.
+- Mantener compatible el save competitivo de v0.9.0 (`seasonSchema: 3`).
 
 ## NEXO
 

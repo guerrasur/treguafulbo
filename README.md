@@ -1,5 +1,17 @@
 # Treguafulbo
 
+## v0.9.1
+
+Correcciones de la revisión de v0.9.0:
+
+- los botones de patear, atajar y confirmar vuelven a funcionar;
+- cada remate de penal se compara con la elección del arquero rival;
+- Escape no abandona un desempate pendiente y **Ver resultado** retoma los encuentros pendientes;
+- álbum, XP, sonido y trofeos se recuperan correctamente al recargar;
+- las tablas finales del Torneo y la Liga muestran primero al campeón del desempate;
+- el plantel inicial informa las monedas reales después del dado y las zonas respetan las casillas activas del mapa;
+- se conservan los saves de v0.9.0 (`seasonSchema: 3`).
+
 ## v0.9.0
 
 La partida ahora tiene cuatro escalas claras: **Partido → Torneo → Liga → Prestigio**.

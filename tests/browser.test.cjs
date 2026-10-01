@@ -32,7 +32,7 @@ async function createLeague(p,n=3){
   await p.locator('#gameScreen').waitFor({state:'visible'});
   await p.locator('#rosterIntroDialog').waitFor({state:'visible'});
   assert.equal(await p.locator('#rosterIntroList .roster-intro-row').count(),11);
-  assert((await p.locator('#rosterIntroMeta').innerText()).includes('30 monedas'));
+  assert((await p.locator('#rosterIntroMeta').innerText()).includes(`${(await stored(p)).teams[0].coins} monedas`));
   await p.locator('#rosterIntroContinue').click();
 }
 
@@ -53,7 +53,7 @@ async function playToFinal(p){
     const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));
     await createLeague(p,3);
 
-    assert.equal(await p.locator('#versionLabel').innerText(),'v0.9.0');
+    assert.equal(await p.locator('#versionLabel').innerText(),'v0.9.1');
     assert.equal((await stored(p)).seasonSchema,3);
     assert((await p.locator('#seasonStrip').innerText()).includes('TORNEO 1/5'));
     assert(await p.locator('#map .map-void').count()>=5);
@@ -81,7 +81,9 @@ async function playToFinal(p){
     assert(await p.locator('#standings table').isVisible());
     assert((await p.locator('.league-rules-note').first().innerText()).includes('1.º +5'));
 
+    const profileBeforeReload=await p.evaluate(()=>JSON.parse(localStorage.getItem('treguafulbo-profile-v1')));
     await p.reload();
+    assert((await p.locator('#careerHome').innerText()).includes(`Álbum ${profileBeforeReload.collection.length}/200`));
     await p.locator('#newGameButton').click();
     assert.equal(await p.locator('#teamNameInput').inputValue(),'Club Demo');
     assert.equal(await p.locator('#color1Input').inputValue(),'#112233');
@@ -89,6 +91,7 @@ async function playToFinal(p){
     await p.locator('#setupDialog [data-close-dialog]').click();
     await p.locator('#continueButton').click();
     if(await p.locator('#rosterIntroDialog').evaluate(d=>d.open))await p.locator('#rosterIntroContinue').click();
+    assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('treguafulbo-profile-v1'))),profileBeforeReload);
 
     assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`overflow after reload at ${width}`);
     await context.close();
@@ -117,16 +120,28 @@ async function playToFinal(p){
     await p.locator('#matchDialog').waitFor({state:'visible'});
     await playToFinal(p);
     await p.locator('#penaltyDialog').waitFor({state:'visible'});
+    await p.keyboard.press('Escape');
+    assert(await p.locator('#penaltyDialog').evaluate(d=>d.open));
     await p.locator('[data-penalty-kick=left]').click();
     await p.locator('[data-penalty-dive=right]').click();
     assert.equal(await p.locator('#penaltyConfirmButton').isEnabled(),true);
     await p.locator('#penaltyConfirmButton').click();
     assert((await p.locator('#penaltyReveal').innerText()).length>0);
+    await p.locator('[data-penalty-kick=center]').click();
+    await p.reload();
+    await p.locator('#continueButton').click();
+    await p.locator('#penaltyDialog').waitFor({state:'visible'});
+    assert((await p.locator('#penaltyRound').innerText()).includes('Ronda 2'));
+    assert.equal((await stored(p)).pendingTiebreaker.penalties.selectedKick,'center');
+    assert.equal(await p.locator('#penaltyConfirmButton').isEnabled(),false);
+    await p.locator('[data-penalty-dive=left]').click();
+    await p.locator('#penaltyConfirmButton').click();
+    assert.equal((await stored(p)).pendingTiebreaker.penalties.round,2);
     assert.deepEqual(errors,[]);
     await context.close();
   }
 
-  console.log('PASS v0.9 browser flows: tournament intro, packs, league table, identity, local/visitor and penalties');
+  console.log('PASS v0.9.1 browser flows: tournament intro, packs, league table, identity, profile reload, local/visitor and penalty recovery');
   await browser.close();
   server.close();
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

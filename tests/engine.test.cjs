@@ -3,15 +3,15 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 
-function engine(){
-  const storage=new Map();
+function engine(initialStorage=[],dom=null){
+  const storage=new Map(initialStorage);
   const ctx={
     console,
     Math:Object.create(Math),
     Date,JSON,Number,Array,Object,Map,Set,String,Boolean,
     setTimeout:()=>0,clearTimeout(){},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
-    document:{addEventListener(){},querySelector(){return null;},querySelectorAll(){return [];}}
+    document:dom||{addEventListener(){},querySelector(){return null;},querySelectorAll(){return [];}}
   };
   vm.runInNewContext(fs.readFileSync('players-argentina-2026.js','utf8'),ctx);
   const api=`globalThis.game={
@@ -22,12 +22,13 @@ function engine(){
     availableExpansion,battleCandidates,ownedTiles,hashStat,scoutingCapacity,ensureScouting,
     regionForCell,regionName,regionOwner,regionOwners,regionProgress,controlledRegions,regionChanges,
     roundIncome,grantRoundIncome,rewardFirstConquest,reinforceableCells,reinforceTile,playerCost,
-    finishGame,finalizeTournament,evaluateLeagueCompletion,completeTiebreaker,leagueClinchedId,
+    finishGame,finalizeTournament,finalizeLeague,evaluateLeagueCompletion,completeTiebreaker,leagueClinchedId,
+    makeTiebreaker,resolvePenaltyRound,showPenaltyDialog,rankedTeams,
     queueLateEntrant,setState:s=>state=s,getState:()=>state,getProfile:()=>profile,setRandom:fn=>Math.random=fn
   };`;
   const source=fs.readFileSync('game.js','utf8').replace("document.addEventListener('DOMContentLoaded',init);",api+"document.addEventListener('DOMContentLoaded',init);");
   vm.runInNewContext(source,ctx);
-  return {g:ctx.game,storage};
+  return {g:ctx.game,storage,ctx};
 }
 
 function competition(g,n,seed='test'){
@@ -109,9 +110,16 @@ test('Empate por el primer puesto crea desempate jugable y soporta empate múlti
   assert(g.finishGame());
   assert(s.pendingTiebreaker);
   assert.equal(s.pendingTiebreaker.candidates.length,4);
-  let matches=0;
-  while(s.pendingTiebreaker){matches++;g.completeTiebreaker(s.pendingTiebreaker.homeId);}
-  assert.equal(matches,3);
+  const eliminated=new Set();
+  while(s.pendingTiebreaker){
+    const tb=s.pendingTiebreaker;
+    // Keep every remaining pairing visible to the human so no AI pairing is skipped by this test.
+    s.teams.forEach(t=>t.human=t.id===tb.homeId);
+    eliminated.add(tb.awayId);
+    g.completeTiebreaker(tb.homeId);
+  }
+  assert.equal(eliminated.size,3);
+  assert.equal(eliminated.has(s.tournament.championId),false);
   assert(s.tournament.awarded);
   assert(s.tournament.championId);
   assert.equal(s.winnerIds.length,1);
@@ -164,6 +172,102 @@ test('Save v0.9 recarga; save competitivo viejo se descarta',()=>{
   const {g,storage}=engine(),s=competition(g,2,'save');
   g.save();const loaded=g.load();assert(loaded);assert.equal(loaded.seasonSchema,3);assert.equal(loaded.league.id,s.league.id);
   const old={...s,seasonSchema:2};storage.set('treguafulbo-demo-v1',JSON.stringify(old));assert.equal(g.load(),null);
+});
+
+test('Álbum, XP y títulos se recuperan al cargar una nueva instancia',()=>{
+  const {g,storage}=engine(),s=competition(g,2,'profile-reload');
+  g.awardMatch(g.simulateMatch('t0','t1',null));
+  g.finalizeTournament('t0');g.finalizeLeague('t0');g.save();
+  const before=JSON.parse(storage.get('treguafulbo-profile-v1'));
+  before.collection=Array.from(s.teams[0].inventory);
+  storage.set('treguafulbo-profile-v1',JSON.stringify(before));
+  const reloaded=engine(storage).g;
+  assert.deepEqual(JSON.parse(JSON.stringify(reloaded.getProfile())),before);
+});
+
+for(const humanId of ['t0','t1'])test(`Penales: el remate se compara con el arquero rival (${humanId})`,()=>{
+  const {g,ctx}=engine(),s=competition(g,2,`penalty-${humanId}`);
+  s.teams.forEach(t=>t.human=t.id===humanId);
+  ctx.document.querySelector=selector=>selector==='#penaltyReveal'?{textContent:''}:null;
+  g.setRandom(()=>.5); // The AI shoots and dives to the center.
+  s.pendingTiebreaker={homeId:'t0',awayId:'t1',stage:'penalties',scope:'tournament',penalties:{round:0,home:0,away:0,rounds:[],selectedKick:'left',selectedDive:'left'}};
+  g.resolvePenaltyRound();
+  const p=s.pendingTiebreaker.penalties;
+  assert.equal(p.home,1);assert.equal(p.away,1);
+  const r=p.rounds[0];
+  assert.equal(humanId==='t0'?r.homeDive:r.awayDive,'left');
+  assert.equal(humanId==='t0'?r.awayDive:r.homeDive,'center');
+  p.selectedKick='left';p.selectedDive='center';
+  g.resolvePenaltyRound();
+  assert.equal(humanId==='t0'?p.home:p.away,2);
+  assert.equal(humanId==='t0'?p.away:p.home,1);
+});
+
+test('Las tablas finales respetan al campeón del desempate',()=>{
+  const {g}=engine(),s=competition(g,2,'final-ranking');
+  s.teams.forEach((t,i)=>{t.points=12;t.gf=10-i;t.ga=5;});
+  g.finalizeTournament('t1');
+  assert.equal(g.rankedTeams()[0].id,'t1');
+  assert.equal(g.rankedTeams()[0].rank,1);
+  s.league.points={t0:20,t1:20};g.finalizeLeague('t1');
+  assert.equal(g.rankedLeagueTeams()[0].team.id,'t1');
+  assert.equal(g.rankedLeagueTeams()[1].rank,2);
+});
+
+test('Inicialización: los seis botones de penales y confirmar responden',()=>{
+  function node(dataset={}){
+    const handlers={};
+    return {dataset,open:false,value:'',style:{setProperty(){}},classList:{add(){},remove(){},toggle(){}},
+      addEventListener:(type,fn)=>handlers[type]=fn,emit:(type,event={})=>handlers[type]?.(event),
+      setAttribute(){},append(){},showModal(){this.open=true;}};
+  }
+  const nodes=new Map([...fs.readFileSync('index.html','utf8').matchAll(/id="([^"]+)"/g)].map(m=>[`#${m[1]}`,node()]));
+  nodes.set('.eyebrow',node());
+  const kicks=['left','center','right'].map(d=>node({penaltyKick:d})),dives=['left','center','right'].map(d=>node({penaltyDive:d}));
+  const groups={'#penaltyDialog [data-penalty-kick]':kicks,'#penaltyDialog [data-penalty-dive]':dives};
+  let ready;
+  const dom={addEventListener:(_,fn)=>ready=fn,querySelector:s=>nodes.get(s)||groups[s]?.[0]||null,querySelectorAll:s=>groups[s]||[],createElement:()=>node()};
+  const {g}=engine([],dom),s=competition(g,2,'penalty-controls');
+  assert.doesNotThrow(ready);
+  s.pendingTiebreaker={homeId:'t0',awayId:'t1',stage:'penalties',scope:'tournament',penalties:{round:0,home:0,away:0,rounds:[],selectedKick:null,selectedDive:null}};
+  g.showPenaltyDialog();
+  const confirm=nodes.get('#penaltyConfirmButton');assert(confirm.disabled);
+  kicks.forEach(k=>{k.emit('click');assert.equal(s.pendingTiebreaker.penalties.selectedKick,k.dataset.penaltyKick);});
+  dives.forEach(d=>{d.emit('click');assert.equal(s.pendingTiebreaker.penalties.selectedDive,d.dataset.penaltyDive);});
+  assert.equal(confirm.disabled,false);
+  confirm.emit('click');assert.equal(s.pendingTiebreaker.penalties.round,1);assert(confirm.disabled);
+  let cancelled=false;nodes.get('#penaltyDialog').emit('cancel',{preventDefault:()=>cancelled=true});assert(cancelled);
+});
+
+test('Recargar durante los penales conserva las elecciones y el resultado simulado',()=>{
+  const {g,storage}=engine(),s=competition(g,2,'penalty-reload');
+  s.finished=true;s.finishReason='tournament-tiebreak';s.pendingTiebreaker=g.makeTiebreaker('tournament',['t0','t1']);
+  const tb=s.pendingTiebreaker;tb.stage='penalties';tb.penalties={round:1,home:1,away:0,rounds:[],selectedKick:'right',selectedDive:null};
+  g.save();
+  const loaded=engine(storage).g.load();
+  assert.equal(loaded.pendingTiebreaker.match.id,tb.match.id);
+  assert.equal(JSON.stringify(loaded.pendingTiebreaker.match),JSON.stringify(tb.match));
+  assert.equal(JSON.stringify(loaded.pendingTiebreaker.penalties),JSON.stringify(tb.penalties));
+  assert.equal(loaded.finished,true);
+});
+
+for(const n of [2,3,4])test(`${n} equipos: Ligas completas con recargas entre Torneos (10 simulaciones)`,()=>{
+  for(let trial=0;trial<10;trial++){
+    const {g}=engine();let s=competition(g,n,`league-${n}-${trial}`),tournaments=0;
+    while(!s.league.finished&&tournaments<5){
+      completeTournament(g,s);tournaments++;
+      assert.equal(s.league.history.length,tournaments);
+      assert.equal(new Set(s.league.history.map(h=>h.mapSignature)).size,tournaments);
+      g.save();s=g.load();g.setState(s);
+      if(!s.league.finished){s=g.createTournamentState(s.league,g.teamIdentitiesFromCurrent(),tournaments+1);g.setState(s);}
+    }
+    assert(s.league.finished);assert(s.league.championId);assert.equal(s.pendingTiebreaker,null);
+    for(const team of s.teams){
+      const expected=s.league.history.reduce((sum,h)=>sum+h.placements.find(p=>p.teamId===team.id).leaguePoints,0);
+      assert.equal(s.league.points[team.id],expected);
+    }
+    assert.equal(g.rankedLeagueTeams()[0].team.id,s.league.championId);
+  }
 });
 
 test('Economía y refuerzo siguen siendo internos al Torneo',()=>{
