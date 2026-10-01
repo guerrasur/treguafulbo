@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '0.9.1';
+  const VERSION = '0.9.2';
   const SAVE_KEY = 'treguafulbo-demo-v1';
   const LEGACY_SAVE_KEY = 'trucebol-demo-v1';
   const PROFILE_KEY='treguafulbo-profile-v1';
@@ -1255,7 +1255,7 @@
       finalBox.classList.remove('hidden');
       const human=humanTeam(),involved=match.homeId===human.id||match.awayId===human.id,won=involved&&match.result===(match.homeId===human.id?'home':'away'),draw=match.result==='draw';
       const result=el('div',`result-banner ${draw?'draw':won?'win':'loss'}`);const resultMeta=match.mode==='tiebreaker'?'Desempate · sin puntos':`${involved?(draw?'+1 punto':won?'+3 puntos':'0 puntos'):'Torneo'}${match.countsForLeague===false?' · Amistoso':''}${involved&&match.xp?` · +${match.xp} XP`:''}`;result.append(el('strong','',involved?(draw?'Empate':won?'Victoria':'Derrota'):'Resultado'),el('span','',resultMeta));finalBox.append(result,matchGoalsSummary(match,home,away));if(isReplay)finalBox.append(el('small','rules-note','Resultado y premios ya registrados.'));
-      if(involved&&Number.isFinite(match.territoryDelta))finalBox.append(el('div','rules-note',`Territorio: ${match.territoryDelta>0?'+':''}${match.territoryDelta} casillas${match.conquestReward?` · +${match.conquestReward} monedas por primera conquista`:''}`));
+      if(involved&&Number.isFinite(match.territoryDelta))finalBox.append(el('div','rules-note',`Territorio: ${match.territoryDelta>0?'+':''}${match.territoryDelta} ${Math.abs(match.territoryDelta)===1?'casilla':'casillas'}${won&&match.conquestReward?` · +${match.conquestReward} monedas por primera conquista`:''}`));
       (match.regionChanges||[]).filter(change=>change.before===human.id||change.after===human.id).forEach(change=>{const gained=change.after===human.id,card=el('div',`region-result ${gained?'gained':'lost'}`);card.append(el('strong','',gained?`${change.name} dominada`:`${change.name} perdida`),el('span','',gained?`+${change.reward} monedas por ronda mientras la controles`:`Dejás de recibir +${change.reward} monedas por ronda`));finalBox.append(card);});
       if(match.star){const star=el('div','match-star'),info=el('div');info.append(el('span','panel-kicker','FIGURA'),el('strong','',match.star.name),el('small','',`${state.teams.find(t=>t.id===match.star.teamId)?.name||''} · ${match.star.pos} · ${match.star.goals} G · ${match.star.assists} A`));star.append(info,el('b','',String(match.star.rating)));finalBox.append(star);}
       if(match.playerRatings?.length){const details=el('details','match-ratings');details.append(el('summary','match-section-title','Rendimientos de los 22 jugadores'));match.playerRatings.forEach(p=>{const row=el('div','rating-row');row.append(el('span','',`${p.name} · ${state.teams.find(t=>t.id===p.teamId)?.name||''}`),el('b','',String(p.rating)));details.append(row);});finalBox.append(details);}

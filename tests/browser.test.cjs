@@ -53,7 +53,7 @@ async function playToFinal(p){
     const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));
     await createLeague(p,3);
 
-    assert.equal(await p.locator('#versionLabel').innerText(),'v0.9.1');
+    assert.equal(await p.locator('#versionLabel').innerText(),'v0.9.2');
     assert.equal((await stored(p)).seasonSchema,3);
     assert((await p.locator('#seasonStrip').innerText()).includes('TORNEO 1/5'));
     assert(await p.locator('#map .map-void').count()>=5);
@@ -141,7 +141,7 @@ async function playToFinal(p){
     await context.close();
   }
 
-  console.log('PASS v0.9.1 browser flows: tournament intro, packs, league table, identity, profile reload, local/visitor and penalty recovery');
+  console.log('PASS v0.9.2 browser flows: tournament intro, packs, league table, identity, profile reload, local/visitor and penalty recovery');
   await browser.close();
   server.close();
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

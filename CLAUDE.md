@@ -2,7 +2,7 @@
 
 ## Producto
 
-Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.9.1 es local: 1 humano y 1–3 rivales simulados. La estructura competitiva usa Torneos dentro de una Liga persistente.
+Juego web de fútbol + territorio pensado para multiplayer asincrónico con amigos. La demo v0.9.2 es local: 1 humano y 1–3 rivales simulados. La estructura competitiva usa Torneos dentro de una Liga persistente.
 
 ## Verificaciones de v0.9.1
 

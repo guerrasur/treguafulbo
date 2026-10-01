@@ -1,5 +1,10 @@
 # Treguafulbo
 
+## v0.9.2
+
+- el resultado territorial muestra el premio de primera conquista sólo cuando lo gana el jugador; perder una casilla ya no anuncia las monedas recibidas por el rival como propias;
+- mantiene todas las correcciones y los saves compatibles de v0.9.1.
+
 ## v0.9.1
 
 Correcciones de la revisión de v0.9.0:
